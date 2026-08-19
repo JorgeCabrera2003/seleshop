@@ -270,7 +270,7 @@ export default function HomePage() {
           />
         )}
 
-        {activeTab === 'expenses' && !isCashier && (
+        {activeTab === 'expenses' && (
           <ExpensesModule
             expenses={expenses}
             bcvRate={bcvRate}

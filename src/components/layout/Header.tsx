@@ -81,14 +81,15 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right: User Badge & Settings Button */}
         <div className="relative flex items-center gap-1.5 sm:gap-2">
           
-          {/* Quick Logout Button */}
+          {/* Quick Lock / Logout Button */}
           {onLogout && (
             <button
               onClick={onLogout}
-              title="Cerrar Turno / Salir"
-              className="p-2 sm:p-2.5 rounded-2xl border border-stone-700 bg-stone-900 text-stone-400 hover:text-stone-100 hover:bg-stone-800 transition-all flex items-center justify-center touch-target-lg"
+              title="Bloquear pantalla / Cerrar Turno"
+              className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-2xl border border-stone-700 bg-stone-900 text-stone-400 hover:text-amber-400 hover:border-[#D4AF37]/50 hover:bg-stone-800 transition-all flex items-center gap-1.5 justify-center touch-target-lg shadow-sm"
             >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline text-xs font-bold text-stone-300">Bloquear</span>
             </button>
           )}
 
