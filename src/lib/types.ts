@@ -15,9 +15,11 @@ export type UserRole = 'ADMIN' | 'CASHIER';
 export interface User {
   id: string;
   name: string;
+  email?: string;
+  password?: string;
   username: string;
   role: UserRole;
-  pin: string; // 4-6 digit PIN
+  pin: string; // 4-6 digit PIN for fast login
   is_active: boolean;
   created_at: string;
 }

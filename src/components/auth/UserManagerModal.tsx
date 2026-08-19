@@ -137,7 +137,7 @@ export const UserManagerModal: React.FC<UserManagerModalProps> = ({
               <label className="text-xs font-bold text-stone-400 block mb-1">Nombre Completo *</label>
               <input
                 type="text"
-                placeholder="Ej. Juan Pérez"
+                placeholder="Ej. Sele o Cajero 1"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-stone-900 border border-stone-700 rounded-xl p-3 text-stone-100 font-bold focus:outline-none focus:border-amber-500"
