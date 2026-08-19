@@ -56,14 +56,7 @@ export default function HomePage() {
   const loadDataFromIndexedDB = useCallback(async () => {
     try {
       await seedInitialDataIfEmpty();
-      let p = await getAllFromStore<Product>('products');
-
-      // Auto-upgrade to snacks, sweets, fast food & otros catalog if old schema detected
-      if (p.some((prod) => prod.name.includes('Harina PAN') || prod.category === 'Galletas & Dulces' || prod.category === 'Untables')) {
-        await seedInitialDataIfEmpty(true);
-        p = await getAllFromStore<Product>('products');
-      }
-
+      const p = await getAllFromStore<Product>('products');
       const c = await getAllFromStore<Client>('clients');
       const s = await getAllFromStore<Sale>('sales');
       const d = await getAllFromStore<Debt>('debts');

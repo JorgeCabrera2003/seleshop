@@ -93,7 +93,7 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({
     .reduce((sum, d) => sum + d.amount_usd, 0);
 
   const handleReset = async () => {
-    if (window.confirm('¿Reiniciar los datos de demostración a su estado inicial?')) {
+    if (window.confirm('¿Deseas vaciar y limpiar toda la base de datos (ventas, deudas, gastos, clientes y productos) para empezar desde cero?')) {
       await clearAllLocalData();
       onResetData();
     }
@@ -119,7 +119,7 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({
           onClick={handleReset}
           className="w-full sm:w-auto px-4 py-2.5 bg-transparent hover:bg-stone-800 border border-stone-700 text-stone-400 hover:text-stone-100 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all touch-target-lg"
         >
-          <RotateCcw className="w-3.5 h-3.5" /> Reiniciar Demo
+          <RotateCcw className="w-3.5 h-3.5" /> Limpiar Base de Datos
         </button>
       </div>
 
