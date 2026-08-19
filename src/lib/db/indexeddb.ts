@@ -187,6 +187,13 @@ export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp
     retries: 0,
   };
   await db.put('syncQueue', syncItem);
+
+  // Auto-sincronización instantánea si hay conexión a internet
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
+    import('../sync/syncEngine').then(({ processSyncQueue }) => {
+      processSyncQueue().catch((err) => console.warn('[AutoSync] Error:', err));
+    });
+  }
 }
 
 export async function clearAllLocalData() {

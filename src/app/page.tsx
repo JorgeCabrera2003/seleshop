@@ -113,17 +113,23 @@ export default function HomePage() {
         .catch((err) => console.warn('Error registrando Service Worker:', err));
     }
 
-    // 2. Online / Offline Listener
+    // 2. Online / Offline Listener & Visibility Listener
     setIsOnline(navigator.onLine);
     const handleOnline = () => {
       setIsOnline(true);
-      // Auto-sync when coming back online
       processSyncQueue().then(() => pullAllFromSupabase()).then(() => loadDataFromIndexedDB());
     };
     const handleOffline = () => setIsOnline(false);
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        processSyncQueue().then(() => pullAllFromSupabase()).then(() => loadDataFromIndexedDB());
+      }
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // 3. Load DB & Rates
     loadDataFromIndexedDB();
@@ -142,9 +148,22 @@ export default function HomePage() {
       });
     }
 
+    // 6. Background Heartbeat Auto-Sync Interval (runs silently every 5 seconds)
+    const syncInterval = setInterval(() => {
+      if (navigator.onLine) {
+        processSyncQueue().then((res) => {
+          if (res.processed > 0) {
+            loadDataFromIndexedDB();
+          }
+        }).catch(() => {});
+      }
+    }, 5000);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(syncInterval);
       unsubscribeRealtime();
     };
   }, [loadDataFromIndexedDB, updateBCVRate]);

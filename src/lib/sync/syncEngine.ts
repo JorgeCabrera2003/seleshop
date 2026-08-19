@@ -2,18 +2,25 @@ import { getDB, deleteFromStore, putToStore } from '../db/indexeddb';
 import { getSupabaseClient } from '../supabase/client';
 import { SyncQueueItem, Product, Client, Sale, Debt, Expense, User } from '../types';
 
+let isProcessingSync = false;
+
 export async function processSyncQueue(): Promise<{ processed: number; errors: number }> {
+  if (isProcessingSync) return { processed: 0, errors: 0 };
+
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { processed: 0, errors: 0 };
   }
 
-  const db = await getDB();
-  const queue: SyncQueueItem[] = await db.getAll('syncQueue');
+  isProcessingSync = true;
+  try {
+    const db = await getDB();
+    const queue: SyncQueueItem[] = await db.getAll('syncQueue');
 
-  if (queue.length === 0) {
-    return { processed: 0, errors: 0 };
-  }
+    if (queue.length === 0) {
+      isProcessingSync = false;
+      return { processed: 0, errors: 0 };
+    }
 
   let processedCount = 0;
   let errorCount = 0;
@@ -46,6 +53,9 @@ export async function processSyncQueue(): Promise<{ processed: number; errors: n
   }
 
   return { processed: processedCount, errors: errorCount };
+  } finally {
+    isProcessingSync = false;
+  }
 }
 
 /**
