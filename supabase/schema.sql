@@ -2,26 +2,37 @@
 -- SELESHOP - ESQUEMA DE BASE DE DATOS RELACIONAL POSTGRESQL (SUPABASE)
 -- =============================================================================
 
+-- 0. TABLA: USUARIOS Y CAJEROS
+CREATE TABLE IF NOT EXISTS public.users (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    username TEXT NOT NULL,
+    role TEXT CHECK (role IN ('ADMIN', 'CASHIER')) DEFAULT 'CASHIER',
+    pin TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 1. TABLA: PRODUCTOS
 CREATE TABLE IF NOT EXISTS public.products (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    category TEXT DEFAULT 'Abarrotes',
+    category TEXT DEFAULT 'Chucherías',
     price_usd NUMERIC(12,2) NOT NULL CHECK (price_usd >= 0),
     stock_quantity INTEGER NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
     is_active BOOLEAN DEFAULT true,
-    user_id UUID DEFAULT auth.uid(),
+    user_id TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 2. TABLA: CLIENTES
 CREATE TABLE IF NOT EXISTS public.clients (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     full_name TEXT NOT NULL,
     whatsapp_number TEXT NOT NULL,
     notes TEXT,
-    user_id UUID DEFAULT auth.uid(),
+    user_id TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

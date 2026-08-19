@@ -1,8 +1,8 @@
 import { openDB, IDBPDatabase } from 'idb';
-import { Product, Client, Sale, Debt, Expense, ExchangeRate, HistoricalRate, SyncQueueItem } from '../types';
+import { Product, Client, Sale, Debt, Expense, ExchangeRate, HistoricalRate, SyncQueueItem, User, AuthSession } from '../types';
 
 const DB_NAME = 'seleshop-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export async function getDB(): Promise<IDBPDatabase> {
   return openDB(DB_NAME, DB_VERSION, {
@@ -34,8 +34,35 @@ export async function getDB(): Promise<IDBPDatabase> {
       if (!db.objectStoreNames.contains('syncQueue')) {
         db.createObjectStore('syncQueue', { keyPath: 'id' });
       }
+      if (!db.objectStoreNames.contains('users')) {
+        db.createObjectStore('users', { keyPath: 'id' });
+      }
     },
   });
+}
+
+// Session Management Helpers in LocalStorage
+const SESSION_KEY = 'seleshop_active_session';
+
+export function getActiveSession(): AuthSession | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthSession;
+  } catch {
+    return null;
+  }
+}
+
+export function setActiveSession(session: AuthSession) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+export function clearActiveSession() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(SESSION_KEY);
 }
 
 // Production Database Initializer (Clean & ready for real use)
@@ -164,10 +191,11 @@ export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp
 
 export async function clearAllLocalData() {
   const db = await getDB();
-  const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue'];
+  const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users'];
   for (const s of stores) {
     await db.clear(s);
   }
+  clearActiveSession();
   await seedInitialDataIfEmpty(true);
 }
 

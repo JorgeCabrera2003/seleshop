@@ -1,10 +1,10 @@
-import { getDB, deleteFromStore } from '../db/indexeddb';
-import { supabase, isSupabaseConfigured } from '../supabase/client';
-import { SyncQueueItem } from '../types';
+import { getDB, deleteFromStore, putToStore } from '../db/indexeddb';
+import { getSupabaseClient } from '../supabase/client';
+import { SyncQueueItem, Product, Client, Sale, Debt, Expense, User } from '../types';
 
 export async function processSyncQueue(): Promise<{ processed: number; errors: number }> {
-  if (!isSupabaseConfigured || !supabase) {
-    // If Supabase credentials are not set up yet, keep queue items locally
+  const supabase = getSupabaseClient();
+  if (!supabase) {
     return { processed: 0, errors: 0 };
   }
 
@@ -18,7 +18,6 @@ export async function processSyncQueue(): Promise<{ processed: number; errors: n
   let processedCount = 0;
   let errorCount = 0;
 
-  // Sort by timestamp
   queue.sort((a, b) => a.timestamp - b.timestamp);
 
   for (const item of queue) {
@@ -26,7 +25,7 @@ export async function processSyncQueue(): Promise<{ processed: number; errors: n
       const { table_name, action, data } = item;
 
       if (action === 'INSERT') {
-        const { error } = await supabase.from(table_name).insert(data);
+        const { error } = await supabase.from(table_name).upsert(data);
         if (error) throw error;
       } else if (action === 'UPDATE') {
         const { error } = await supabase.from(table_name).update(data).eq('id', data.id);
@@ -36,17 +35,108 @@ export async function processSyncQueue(): Promise<{ processed: number; errors: n
         if (error) throw error;
       }
 
-      // Remove from syncQueue on success
       await deleteFromStore('syncQueue', item.id);
       processedCount++;
     } catch (err) {
-      console.error(`Error syncing item ${item.id} to Supabase:`, err);
+      console.error(`Error sincronizando item ${item.id} (${item.table_name}):`, err);
       errorCount++;
-      // Increment retries
-      item.retries += 1;
+      item.retries = (item.retries || 0) + 1;
       await db.put('syncQueue', item);
     }
   }
 
   return { processed: processedCount, errors: errorCount };
+}
+
+/**
+ * Descarga todos los registros de Supabase a IndexedDB para sincronización inicial o periódica
+ */
+export async function pullAllFromSupabase(): Promise<{ success: boolean; count: number }> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { success: false, count: 0 };
+
+  try {
+    let totalCount = 0;
+
+    // 1. Productos
+    const { data: prods } = await supabase.from('products').select('*');
+    if (prods && prods.length > 0) {
+      for (const p of prods) await putToStore('products', p);
+      totalCount += prods.length;
+    }
+
+    // 2. Clientes
+    const { data: clients } = await supabase.from('clients').select('*');
+    if (clients && clients.length > 0) {
+      for (const c of clients) await putToStore('clients', c);
+      totalCount += clients.length;
+    }
+
+    // 3. Ventas
+    const { data: sales } = await supabase.from('sales').select('*');
+    if (sales && sales.length > 0) {
+      for (const s of sales) await putToStore('sales', s);
+      totalCount += sales.length;
+    }
+
+    // 4. Deudas / Fiados
+    const { data: debts } = await supabase.from('debts').select('*');
+    if (debts && debts.length > 0) {
+      for (const d of debts) await putToStore('debts', d);
+      totalCount += debts.length;
+    }
+
+    // 5. Gastos
+    const { data: expenses } = await supabase.from('expenses').select('*');
+    if (expenses && expenses.length > 0) {
+      for (const e of expenses) await putToStore('expenses', e);
+      totalCount += expenses.length;
+    }
+
+    // 6. Usuarios
+    const { data: users } = await supabase.from('users').select('*');
+    if (users && users.length > 0) {
+      for (const u of users) await putToStore('users', u);
+      totalCount += users.length;
+    }
+
+    return { success: true, count: totalCount };
+  } catch (err) {
+    console.error('Error al descargar datos desde Supabase:', err);
+    return { success: false, count: 0 };
+  }
+}
+
+/**
+ * Suscripción en tiempo real con Supabase Realtime (canal multi-dispositivo)
+ */
+export function subscribeToSupabaseRealtime(onDataChanged: (table: string, eventType: string) => void) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return () => {};
+
+  const channel = supabase
+    .channel('seleshop-multi-device-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public' },
+      async (payload) => {
+        const { table, eventType, new: newRecord, old: oldRecord } = payload;
+        
+        try {
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            await putToStore(table as any, newRecord);
+          } else if (eventType === 'DELETE' && oldRecord && oldRecord.id) {
+            await deleteFromStore(table as any, oldRecord.id);
+          }
+          onDataChanged(table, eventType);
+        } catch (err) {
+          console.error(`Error procesando cambio en tiempo real (${table}):`, err);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

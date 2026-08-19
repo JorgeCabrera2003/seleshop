@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wifi, WifiOff, RefreshCw, DollarSign, Database, Edit2, Check, Sun, Moon, History, Settings, X } from 'lucide-react';
-import { ExchangeRate } from '../../lib/types';
+import { Wifi, WifiOff, RefreshCw, DollarSign, Database, Edit2, Check, Sun, Moon, History, Settings, X, User, Users, Cloud, LogOut } from 'lucide-react';
+import { ExchangeRate, User as UserType } from '../../lib/types';
 import { putToStore } from '../../lib/db/indexeddb';
 
 interface HeaderProps {
@@ -15,6 +15,10 @@ interface HeaderProps {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   onOpenDolarHistory?: () => void;
+  currentUser?: UserType | null;
+  onLogout?: () => void;
+  onOpenUserManager?: () => void;
+  onOpenCloudSync?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,10 +31,16 @@ export const Header: React.FC<HeaderProps> = ({
   theme,
   onToggleTheme,
   onOpenDolarHistory,
+  currentUser,
+  onLogout,
+  onOpenUserManager,
+  onOpenCloudSync,
 }) => {
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [tempRate, setTempRate] = useState('');
+
+  const isAdmin = currentUser?.role === 'ADMIN';
 
   const handleSaveRate = async () => {
     const num = parseFloat(tempRate);
@@ -48,35 +58,56 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full glass-panel border-b border-stone-800/80 px-4 py-3 shadow-xl">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        {/* Left: Clean Brand Logo & Title (Ultra Minimalist) */}
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-amber-800 text-stone-100 flex items-center justify-center font-bold text-2xl shadow-md border-2 border-[#D4AF37] shrink-0">
+    <header className="sticky top-0 z-30 w-full glass-panel border-b border-stone-800/80 px-3 sm:px-4 py-2.5 sm:py-3 shadow-xl">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+        
+        {/* Left: Brand Logo & Title */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-2xl bg-amber-800 text-stone-100 flex items-center justify-center font-bold text-xl sm:text-2xl shadow-md border-2 border-[#D4AF37] shrink-0">
             S
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-stone-100 font-wabi">
-            SeleShop
-          </h1>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-100 font-wabi leading-none">
+              SeleShop
+            </h1>
+            {currentUser && (
+              <span className="text-[10px] sm:text-[11px] text-stone-400 font-semibold block mt-0.5">
+                {currentUser.name} · <strong className={isAdmin ? 'text-amber-400' : 'text-stone-300'}>{isAdmin ? 'Dueño' : 'Cajero'}</strong>
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Right: Clean Settings Icon Button */}
-        <div className="relative flex items-center gap-2">
+        {/* Right: User Badge & Settings Button */}
+        <div className="relative flex items-center gap-1.5 sm:gap-2">
+          
+          {/* Quick Logout Button */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              title="Cerrar Turno / Salir"
+              className="p-2 sm:p-2.5 rounded-2xl border border-stone-700 bg-stone-900 text-stone-400 hover:text-stone-100 hover:bg-stone-800 transition-all flex items-center justify-center touch-target-lg"
+            >
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
+
+          {/* Settings Menu Button */}
           <button
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            title="Ajustes del Sistema (Tasa BCV, Tema, Sincronización, Red)"
-            className={`p-2.5 rounded-2xl border-2 transition-all shadow-md flex items-center justify-center ${
+            title="Ajustes del Sistema"
+            className={`p-2 sm:p-2.5 rounded-2xl border-2 transition-all shadow-md flex items-center justify-center touch-target-lg ${
               showSettingsMenu
                 ? 'bg-amber-800 border-[#D4AF37] text-stone-100'
                 : 'bg-stone-900 border-stone-700 text-stone-300 hover:bg-stone-800 hover:text-stone-100'
             }`}
           >
-            <Settings className={`w-6 h-6 ${showSettingsMenu ? 'rotate-90 transition-transform duration-300' : ''}`} />
+            <Settings className={`w-5 h-5 sm:w-6 sm:h-6 ${showSettingsMenu ? 'rotate-90 transition-transform duration-300' : ''}`} />
           </button>
 
-          {/* Floating Settings & BCV Rate Popover Menu */}
+          {/* Floating Settings & Options Menu */}
           {showSettingsMenu && (
-            <div className="absolute right-0 top-14 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-stone-900 border-2 border-[#D4AF37] rounded-3xl p-4 shadow-2xl z-50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute right-0 top-14 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-stone-900 border-2 border-[#D4AF37] rounded-3xl p-4 shadow-2xl z-50 space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between border-b border-stone-800 pb-2">
                 <span className="text-sm font-bold text-stone-200 font-wabi">Menú & Configuración</span>
                 <button
@@ -87,45 +118,90 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
 
-              {/* 1. Tasa BCV del Día Control Inside Menu */}
-              <div className="bg-stone-950 border-2 border-[#D4AF37]/60 p-3.5 rounded-2xl space-y-2">
+              {/* 1. Tasa BCV del Día */}
+              <div className="bg-stone-950 border-2 border-[#D4AF37]/60 p-3 rounded-2xl space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
                     <DollarSign className="w-4 h-4 text-amber-400" /> Tasa BCV del Día
                   </span>
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        setTempRate(bcvRate ? bcvRate.rate_ves.toString() : '36.50');
-                        setIsEditingRate(true);
-                      }}
-                      title="Editar Tasa BCV"
-                      className="p-1 hover:bg-stone-800 text-stone-300 hover:text-amber-400 rounded-lg transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setTempRate(bcvRate ? bcvRate.rate_ves.toString() : '36.50');
+                          setIsEditingRate(true);
+                        }}
+                        title="Editar Tasa BCV"
+                        className="p-1 hover:bg-stone-800 text-stone-300 hover:text-amber-400 rounded-lg transition-colors"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     {onOpenDolarHistory && (
                       <button
                         onClick={() => {
                           onOpenDolarHistory();
                           setShowSettingsMenu(false);
                         }}
-                        title="Ver Histórico de Tasas del Dólar"
+                        title="Ver Histórico de Tasas"
                         className="p-1 hover:bg-stone-800 text-amber-400 rounded-lg transition-colors"
                       >
-                        <History className="w-4 h-4" />
+                        <History className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
                 </div>
 
-                <div className="text-xl font-black text-stone-100">
+                <div className="text-lg font-black text-stone-100">
                   1 USD = {bcvRate ? `${bcvRate.rate_ves.toFixed(2)} VES` : 'Cargando...'}
                 </div>
-                <p className="text-[11px] text-stone-400">Tasa oficial utilizada en todos los cálculos del comercio.</p>
               </div>
 
-              {/* 2. Theme Toggle Option */}
+              {/* 2. Admin Only: User Manager Option */}
+              {isAdmin && onOpenUserManager && (
+                <button
+                  onClick={() => {
+                    onOpenUserManager();
+                    setShowSettingsMenu(false);
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800 hover:border-stone-700 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-stone-400" />
+                    <div>
+                      <span className="text-xs font-bold text-stone-200 block">Gestión de Usuarios</span>
+                      <span className="text-[10px] text-stone-500">Crear cajeros y asignar PIN</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-stone-800 text-stone-300 font-bold px-2 py-0.5 rounded border border-stone-700">
+                    Admin
+                  </span>
+                </button>
+              )}
+
+              {/* 3. Cloud Sync Multidispositivo Option */}
+              {onOpenCloudSync && (
+                <button
+                  onClick={() => {
+                    onOpenCloudSync();
+                    setShowSettingsMenu(false);
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800 hover:border-stone-700 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Cloud className="w-4 h-4 text-amber-400" />
+                    <div>
+                      <span className="text-xs font-bold text-stone-200 block">Sincronización Nube</span>
+                      <span className="text-[10px] text-stone-500">{syncQueueCount} pendientes · Multidispositivo</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-amber-800/50 text-amber-200 font-bold px-2 py-0.5 rounded border border-[#D4AF37]/30">
+                    Realtime
+                  </span>
+                </button>
+              )}
+
+              {/* 4. Theme Toggle Option */}
               <div className="flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800">
                 <span className="text-xs font-bold text-stone-300">Modo de Pantalla</span>
                 <button
@@ -146,25 +222,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
 
-              {/* 3. Sync Queue Option */}
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800">
-                <div>
-                  <span className="text-xs font-bold text-stone-300 block">Sincronización</span>
-                  <span className="text-[10px] text-stone-400">{syncQueueCount} pendientes</span>
-                </div>
-                <button
-                  onClick={() => {
-                    onForceSync();
-                    setShowSettingsMenu(false);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-600 text-stone-100 text-xs font-bold border border-[#D4AF37]/50"
-                >
-                  <Database className="w-3.5 h-3.5" />
-                  <span>Sincronizar</span>
-                </button>
-              </div>
-
-              {/* 4. Network Status Toggle */}
+              {/* 5. Network Status Toggle */}
               <div className="flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800">
                 <span className="text-xs font-bold text-stone-300">Conexión a Red</span>
                 <button
@@ -188,6 +246,21 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </button>
               </div>
+
+              {/* 6. Logout option in menu */}
+              {onLogout && (
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setShowSettingsMenu(false);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-[#C0392B] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Cerrar Sesión ({currentUser?.name})</span>
+                </button>
+              )}
+
             </div>
           )}
         </div>

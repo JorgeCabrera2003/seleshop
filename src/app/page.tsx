@@ -10,10 +10,13 @@ import { DebtsModule } from '../components/debts/DebtsModule';
 import { ExpensesModule } from '../components/expenses/ExpensesModule';
 import { FinancialDashboard } from '../components/dashboard/FinancialDashboard';
 import { DollarHistoryModule } from '../components/dolar/DollarHistoryModule';
-import { Product, Client, Sale, Debt, Expense, ExchangeRate, NavigationTab } from '../lib/types';
-import { seedInitialDataIfEmpty, getAllFromStore, getDB } from '../lib/db/indexeddb';
+import { AuthModule } from '../components/auth/AuthModule';
+import { UserManagerModal } from '../components/auth/UserManagerModal';
+import { CloudSyncModal } from '../components/sync/CloudSyncModal';
+import { Product, Client, Sale, Debt, Expense, ExchangeRate, NavigationTab, User, AuthSession } from '../lib/types';
+import { seedInitialDataIfEmpty, getAllFromStore, getDB, getActiveSession, clearActiveSession } from '../lib/db/indexeddb';
 import { fetchCurrentBCVRate } from '../lib/bimonetary/exchangeRate';
-import { processSyncQueue } from '../lib/sync/syncEngine';
+import { processSyncQueue, pullAllFromSupabase, subscribeToSupabaseRealtime } from '../lib/sync/syncEngine';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('pos');
@@ -21,6 +24,12 @@ export default function HomePage() {
   const [bcvRate, setBcvRate] = useState<ExchangeRate | null>(null);
   const [syncQueueCount, setSyncQueueCount] = useState<number>(0);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Auth & Multi-User State
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentSession, setCurrentSession] = useState<AuthSession | null>(null);
+  const [showUserManager, setShowUserManager] = useState(false);
+  const [showCloudSync, setShowCloudSync] = useState(false);
 
   // App Data State
   const [products, setProducts] = useState<Product[]>([]);
@@ -37,7 +46,6 @@ export default function HomePage() {
       setTheme(savedTheme);
       document.documentElement.className = savedTheme;
     } else {
-      // Auto-detect system preference (prefers-color-scheme)
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const initialTheme = prefersDark ? 'dark' : 'light';
       setTheme(initialTheme);
@@ -61,12 +69,22 @@ export default function HomePage() {
       const s = await getAllFromStore<Sale>('sales');
       const d = await getAllFromStore<Debt>('debts');
       const e = await getAllFromStore<Expense>('expenses');
+      const u = await getAllFromStore<User>('users');
 
       setProducts(p);
       setClients(c);
       setSales(s);
       setDebts(d);
       setExpenses(e);
+      setUsers(u);
+
+      // Check active auth session
+      const sess = getActiveSession();
+      if (sess && u.some((user) => user.id === sess.user.id && user.is_active)) {
+        setCurrentSession(sess);
+      } else {
+        setCurrentSession(null);
+      }
 
       // Check sync queue count
       const db = await getDB();
@@ -85,7 +103,7 @@ export default function HomePage() {
     setBcvRate(rateObj);
   }, []);
 
-  // Initial Startup Effects
+  // Initial Startup Effects & Realtime Multi-Device Sync
   useEffect(() => {
     // 1. Service Worker Registration for PWA
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
@@ -97,7 +115,11 @@ export default function HomePage() {
 
     // 2. Online / Offline Listener
     setIsOnline(navigator.onLine);
-    const handleOnline = () => setIsOnline(true);
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Auto-sync when coming back online
+      processSyncQueue().then(() => pullAllFromSupabase()).then(() => loadDataFromIndexedDB());
+    };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
@@ -107,19 +129,39 @@ export default function HomePage() {
     loadDataFromIndexedDB();
     updateBCVRate();
 
+    // 4. Multi-device Realtime Subscription via Supabase
+    const unsubscribeRealtime = subscribeToSupabaseRealtime((table, event) => {
+      console.log(`[Realtime Sync] Cambio detectado en ${table} (${event})`);
+      loadDataFromIndexedDB();
+    });
+
+    // 5. Initial Pull if online
+    if (navigator.onLine) {
+      pullAllFromSupabase().then((res) => {
+        if (res.count > 0) loadDataFromIndexedDB();
+      });
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      unsubscribeRealtime();
     };
   }, [loadDataFromIndexedDB, updateBCVRate]);
 
   // Attempt Sync when Online status is active
   const handleForceSync = async () => {
     const res = await processSyncQueue();
+    await pullAllFromSupabase();
     await loadDataFromIndexedDB();
     if (res.processed > 0) {
       alert(`¡Sincronización completada! ${res.processed} cambios guardados en Supabase.`);
     }
+  };
+
+  const handleLogout = () => {
+    clearActiveSession();
+    setCurrentSession(null);
   };
 
   if (!isInitialLoaded) {
@@ -133,8 +175,26 @@ export default function HomePage() {
     );
   }
 
+  // ── AUTH GATEWAY: If not logged in, show AuthModule ───────
+  if (!currentSession) {
+    return (
+      <AuthModule
+        users={users}
+        onLoginSuccess={(session) => {
+          setCurrentSession(session);
+          loadDataFromIndexedDB();
+        }}
+        onRefreshUsers={loadDataFromIndexedDB}
+      />
+    );
+  }
+
+  const currentUser = currentSession.user;
+  const isCashier = currentUser.role === 'CASHIER';
+
   return (
     <div className="min-h-screen text-stone-100 flex flex-col selection:bg-amber-800 selection:text-stone-100" style={{ backgroundColor: 'var(--bg-main)' }}>
+      
       {/* Top Header */}
       <Header
         isOnline={isOnline}
@@ -146,6 +206,10 @@ export default function HomePage() {
         theme={theme}
         onToggleTheme={handleToggleTheme}
         onOpenDolarHistory={() => setActiveTab('dolar')}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onOpenUserManager={() => setShowUserManager(true)}
+        onOpenCloudSync={() => setShowCloudSync(true)}
       />
 
       {/* Main View Router */}
@@ -187,7 +251,7 @@ export default function HomePage() {
           />
         )}
 
-        {activeTab === 'expenses' && (
+        {activeTab === 'expenses' && !isCashier && (
           <ExpensesModule
             expenses={expenses}
             bcvRate={bcvRate}
@@ -195,7 +259,7 @@ export default function HomePage() {
           />
         )}
 
-        {activeTab === 'dashboard' && (
+        {activeTab === 'dashboard' && !isCashier && (
           <FinancialDashboard
             sales={sales}
             expenses={expenses}
@@ -210,12 +274,35 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Fixed Ergometric Bottom Navbar */}
+      {/* Fixed Ergometric Bottom Navbar with Role Filter */}
       <Navbar
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab)}
         cartCount={0}
+        currentUser={currentUser}
       />
+
+      {/* User Manager Modal (Admin Only) */}
+      {showUserManager && (
+        <UserManagerModal
+          users={users}
+          currentUserId={currentUser.id}
+          isOpen={showUserManager}
+          onClose={() => setShowUserManager(false)}
+          onRefreshUsers={loadDataFromIndexedDB}
+        />
+      )}
+
+      {/* Cloud Sync Multidispositivo Modal */}
+      {showCloudSync && (
+        <CloudSyncModal
+          isOpen={showCloudSync}
+          onClose={() => setShowCloudSync(false)}
+          syncQueueCount={syncQueueCount}
+          onSyncCompleted={loadDataFromIndexedDB}
+        />
+      )}
+
     </div>
   );
 }

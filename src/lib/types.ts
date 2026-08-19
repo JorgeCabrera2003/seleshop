@@ -10,6 +10,24 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number] | string;
 
+export type UserRole = 'ADMIN' | 'CASHIER';
+
+export interface User {
+  id: string;
+  name: string;
+  username: string;
+  role: UserRole;
+  pin: string; // 4-6 digit PIN
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AuthSession {
+  user: User;
+  token?: string;
+  logged_at: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -18,6 +36,7 @@ export interface Product {
   stock_quantity: number;
   is_active: boolean;
   image_url?: string;
+  user_id?: string;
   updated_at?: string;
 }
 
@@ -27,6 +46,7 @@ export interface Client {
   whatsapp_number: string;
   created_at: string;
   notes?: string;
+  user_id?: string;
 }
 
 export interface Sale {
@@ -37,6 +57,8 @@ export interface Sale {
   rate_at_time: number; // Tasa BCV congelada al milisegundo de la venta
   sale_timestamp: string;
   payment_type: 'CONTADO' | 'FIADO';
+  user_id?: string;
+  user_name?: string;
   items?: SaleItem[];
 }
 
@@ -59,6 +81,7 @@ export interface Debt {
   due_date: string; // YYYY-MM-DD
   status: 'PENDING' | 'PARTIAL' | 'PAID';
   notes?: string;
+  user_id?: string;
   created_at: string;
 }
 
@@ -68,6 +91,9 @@ export interface Expense {
   amount_usd: number;
   category: 'MERCANCIA' | 'SERVICIOS' | 'TRANSPORTE' | 'OTROS';
   expense_date: string;
+  user_id?: string;
+  user_name?: string;
+  created_at?: string;
 }
 
 export interface ExchangeRate {
@@ -87,7 +113,7 @@ export interface HistoricalRate {
 
 export interface SyncQueueItem {
   id: string;
-  table_name: 'products' | 'clients' | 'sales' | 'sale_items' | 'debts' | 'expenses';
+  table_name: 'products' | 'clients' | 'sales' | 'sale_items' | 'debts' | 'expenses' | 'users';
   action: 'INSERT' | 'UPDATE' | 'DELETE';
   data: any;
   timestamp: number;
