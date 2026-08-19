@@ -1,26 +1,232 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --clay-brown-wabi: #A0522D;
+    --stone-grey-wabi: #8B8680;
+    --cream-wabi: #FAF0E6;
+    --charcoal-wabi: #36454F;
+    --kintsugi-gold: #D4AF37;
+    --matcha-green: #6B7B3A;
+    --soft-blush: #E8C4B8;
+    --font-wabi: 'Cormorant Garamond', serif;
+
+    --bg-main: #181614;
+    --text-main: #FAF0E6;
+    --glass-bg: rgba(24, 22, 20, 0.94);
+    --glass-border: rgba(139, 134, 128, 0.3);
+    --kintsugi-accent: #D4AF37;
+  }
+
+  html.light {
+    --bg-main: #FBF8F3;
+    --text-main: #2C2825;
+    --glass-bg: rgba(251, 248, 243, 0.96);
+    --glass-border: rgba(180, 160, 140, 0.35);
+    --kintsugi-accent: #9E5C10;
+  }
+
+
+  html.light body {
+    background-color: #FBF8F3 !important;
+    color: #2C2825 !important;
+  }
+
+  /* ── Light Mode: Fondos ──────────────────────────────────────── */
+  html.light .bg-stone-950,
+  html.light .bg-slate-950 {
+    background-color: #F3ECE2 !important;
+    color: #2C2825 !important;
+  }
+
+  html.light .bg-stone-900,
+  html.light .bg-stone-900\/90,
+  html.light .bg-stone-900\/80,
+  html.light .bg-slate-900,
+  html.light .bg-slate-900\/90,
+  html.light .bg-slate-900\/80 {
+    background-color: #FFFFFF !important;
+    color: #2C2825 !important;
+    box-shadow: 0 2px 12px rgba(140, 120, 100, 0.07) !important;
+  }
+
+  html.light .bg-stone-800,
+  html.light .bg-stone-800\/40 {
+    background-color: #EFE8DE !important;
+    color: #2C2825 !important;
+  }
+
+  html.light .bg-stone-700 {
+    background-color: #DDD4C8 !important;
+    color: #2C2825 !important;
+  }
+
+  /* ── Light Mode: CTAs amber (10% acento) — más claros y cálidos */
+  /* bg-amber-800 → Clay Brown medio #9E5C10 (readable sobre crema) */
+  html.light .bg-amber-800,
+  html.light .bg-amber-800\/90 {
+    background-color: #9E5C10 !important;
+    color: #FFFFFF !important;
+  }
+
+  html.light .bg-amber-700,
+  html.light .hover\:bg-amber-700:hover {
+    background-color: #B8731A !important;
+    color: #FFFFFF !important;
+  }
+
+  html.light .hover\:bg-amber-800:hover {
+    background-color: #9E5C10 !important;
+  }
+
+  /* bg-amber-900/40 → muy suave, casi transparente */
+  html.light .bg-amber-900\/40,
+  html.light .bg-amber-900\/20,
+  html.light .bg-amber-600\/30 {
+    background-color: rgba(158, 92, 16, 0.10) !important;
+  }
+
+  /* ── Light Mode: Textos ──────────────────────────────────────── */
+  html.light .text-stone-100,
+  html.light .text-stone-200,
+  html.light .text-white {
+    color: #1F1C1A !important;
+  }
+
+  html.light .text-stone-300,
+  html.light .text-stone-400,
+  html.light .text-slate-400,
+  html.light .text-slate-300 {
+    color: #59524C !important;
+  }
+
+  html.light .text-stone-500,
+  html.light .text-stone-600 {
+    color: #8A7E76 !important;
+  }
+
+  /* Acento kintsugi en modo claro → Clay Brown más oscuro para legibilidad */
+  html.light .text-amber-300,
+  html.light .text-amber-400 {
+    color: #8C4E0B !important;
+  }
+
+  html.light .text-amber-400 {
+    color: #8C4E0B !important;
+  }
+
+  /* Texto sobre botones CTA amber en light mode → blanco puro */
+  html.light .bg-amber-800 .text-stone-100,
+  html.light .bg-amber-800 span,
+  html.light .bg-amber-800 svg {
+    color: #FFFFFF !important;
+  }
+
+  /* ── Light Mode: Bordes ──────────────────────────────────────── */
+  html.light .border-stone-800,
+  html.light .border-stone-700,
+  html.light .border-slate-800,
+  html.light .border-slate-700 {
+    border-color: #E4DAD0 !important;
+  }
+
+  html.light .border-stone-600 {
+    border-color: #CFC5B9 !important;
+  }
+
+  /* Kintsugi gold border en light mode → más suave */
+  html.light .border-\[\#D4AF37\] {
+    border-color: #C49A28 !important;
+  }
+
+  /* ── Light Mode: wabi-card refinada ─────────────────────────── */
+  html.light .wabi-card {
+    background-color: #FFFFFF;
+    border-color: #E8DDD4;
+    box-shadow: 0 2px 12px rgba(120, 100, 80, 0.07);
+  }
+
+  /* ── Light Mode: glass-panel ────────────────────────────────── */
+  html.light .glass-panel {
+    background: rgba(251, 248, 243, 0.97) !important;
+    border-color: rgba(180, 160, 140, 0.3) !important;
+    box-shadow: 0 2px 16px rgba(120, 100, 80, 0.06) !important;
+  }
+
+  /* ── Light Mode: Navbar tabs activos ────────────────────────── */
+  html.light nav .bg-amber-800\/90 {
+    background-color: #9E5C10 !important;
+    color: #FFFFFF !important;
   }
 }
 
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 1.125rem; /* 18px base font size for elderly accessibility */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Cormorant Garamond Heading Utility */
+.font-wabi {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Wabi-Sabi Organic Asymmetric Card Styling */
+.wabi-card {
+  border-radius: 18px 6px 20px 8px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 2px 6px 18px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Kintsugi Gold Line Accent */
+.kintsugi-border {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.kintsugi-line {
+  position: relative;
+}
+.kintsugi-line::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 10%;
+  width: 80%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+}
+
+/* Accessible Ergometric Touch Targets */
+.touch-target-lg {
+  min-height: 56px;
+  min-width: 56px;
+}
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #8B8680;
+  border-radius: 4px;
 }
