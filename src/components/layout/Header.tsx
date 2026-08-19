@@ -161,8 +161,8 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
 
-              {/* 2. Admin Only: User Manager Option */}
-              {isAdmin && onOpenUserManager && (
+              {/* 2. SuperAdmin Only: User Manager Option */}
+              {isSuperAdmin && onOpenUserManager && (
                 <button
                   onClick={() => {
                     onOpenUserManager();
@@ -171,14 +171,14 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800 hover:border-stone-700 transition-colors text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-stone-400" />
+                    <Users className="w-4 h-4 text-amber-400" />
                     <div>
                       <span className="text-xs font-bold text-stone-200 block">Gestión de Usuarios</span>
-                      <span className="text-[10px] text-stone-500">Crear cajeros y asignar PIN</span>
+                      <span className="text-[10px] text-stone-500">Crear cajeros y asignar roles</span>
                     </div>
                   </div>
-                  <span className="text-[10px] bg-stone-800 text-stone-300 font-bold px-2 py-0.5 rounded border border-stone-700">
-                    Admin
+                  <span className="text-[10px] bg-amber-900/40 text-amber-300 font-bold px-2 py-0.5 rounded border border-[#D4AF37]/40">
+                    SuperAdmin
                   </span>
                 </button>
               )}

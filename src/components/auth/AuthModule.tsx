@@ -408,16 +408,6 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
                 {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                 <span>{isLoading ? 'Verificando & Sincronizando...' : 'Iniciar Sesión & Sincronizar'}</span>
               </button>
-
-              <div className="text-center pt-1">
-                <button
-                  type="button"
-                  onClick={() => { setAuthMode('REGISTER'); setErrorMsg(null); }}
-                  className="text-xs text-stone-400 hover:text-stone-200 font-bold"
-                >
-                  ¿Deseas crear una nueva cuenta? <span className="text-amber-400 underline">Crear aquí</span>
-                </button>
-              </div>
             </form>
           )}
 
