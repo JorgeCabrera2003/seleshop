@@ -63,7 +63,6 @@ export async function seedInitialDataIfEmpty(forceReseed = false) {
     };
     await db.put('exchange_rates', initialRate);
   }
-}
 
   // Seed sample historical rates for offline backup if historical_rates is empty
   const histCount = await db.count('historical_rates');
