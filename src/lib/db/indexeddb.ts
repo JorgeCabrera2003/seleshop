@@ -126,6 +126,35 @@ export async function seedInitialDataIfEmpty(forceReseed = false) {
     }
     await txH.done;
   }
+
+  // Seed default 2 users if empty: Jorge Cabrera (SUPERADMIN) & Sele (ADMIN)
+  const userCount = await db.count('users');
+  if (userCount === 0) {
+    const defaultSuperAdmin: User = {
+      id: 'usr-superadmin-jorge',
+      name: 'Jorge Cabrera',
+      email: 'jorge@seleshop.com',
+      username: 'jorge',
+      role: 'SUPERADMIN',
+      pin: '1234',
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+
+    const defaultAdminSele: User = {
+      id: 'usr-admin-sele',
+      name: 'Sele',
+      email: 'sele@seleshop.com',
+      username: 'sele',
+      role: 'ADMIN',
+      pin: '1234',
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+
+    await db.put('users', defaultSuperAdmin);
+    await db.put('users', defaultAdminSele);
+  }
 }
 
 // Calculate 15th or 30th payment date rule

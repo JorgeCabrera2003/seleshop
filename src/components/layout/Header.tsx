@@ -40,7 +40,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [tempRate, setTempRate] = useState('');
 
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const isSuperAdmin = currentUser?.role === 'SUPERADMIN';
+  const isAdmin = currentUser?.role === 'ADMIN' || isSuperAdmin;
 
   const handleSaveRate = async () => {
     const num = parseFloat(tempRate);
@@ -72,7 +73,9 @@ export const Header: React.FC<HeaderProps> = ({
             </h1>
             {currentUser && (
               <span className="text-[10px] sm:text-[11px] text-stone-400 font-semibold block mt-0.5">
-                {currentUser.name} · <strong className={isAdmin ? 'text-amber-400' : 'text-stone-300'}>{isAdmin ? 'Dueño' : 'Cajero'}</strong>
+                {currentUser.name} · <strong className={isSuperAdmin ? 'text-amber-300 font-black' : isAdmin ? 'text-amber-400 font-bold' : 'text-stone-300'}>
+                  {isSuperAdmin ? 'SuperAdmin' : isAdmin ? 'Admin' : 'Cajero'}
+                </strong>
               </span>
             )}
           </div>

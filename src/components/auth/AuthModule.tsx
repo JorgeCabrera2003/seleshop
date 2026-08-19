@@ -275,8 +275,8 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
                         </div>
                         <div className="min-w-0">
                           <span className="font-extrabold text-xs text-stone-100 block truncate">{u.name}</span>
-                          <span className="text-[10px] text-stone-500 font-semibold block">
-                            {isAdmin ? 'Dueño' : 'Cajero'}
+                          <span className="text-[10px] text-stone-400 font-semibold block">
+                            {u.role === 'SUPERADMIN' ? 'SuperAdmin' : u.role === 'ADMIN' ? 'Admin' : 'Cajero'}
                           </span>
                         </div>
                       </button>

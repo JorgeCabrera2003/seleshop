@@ -10,7 +10,7 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number] | string;
 
-export type UserRole = 'ADMIN' | 'CASHIER';
+export type UserRole = 'SUPERADMIN' | 'ADMIN' | 'CASHIER';
 
 export interface User {
   id: string;

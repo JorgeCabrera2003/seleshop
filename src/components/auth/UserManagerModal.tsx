@@ -154,7 +154,8 @@ export const UserManagerModal: React.FC<UserManagerModalProps> = ({
                   className="w-full bg-stone-900 border border-stone-700 rounded-xl p-3 text-stone-100 font-bold focus:outline-none focus:border-amber-500"
                 >
                   <option value="CASHIER">Cajero / Vendedor</option>
-                  <option value="ADMIN">Dueño / Administrador</option>
+                  <option value="ADMIN">Admin (Dueño / Acceso Total)</option>
+                  <option value="SUPERADMIN">SuperAdmin (Gestión y Control Total)</option>
                 </select>
               </div>
 
