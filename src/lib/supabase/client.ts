@@ -3,9 +3,12 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const STORAGE_URL_KEY = 'seleshop_supabase_url';
 const STORAGE_KEY_KEY = 'seleshop_supabase_anon_key';
 
+const DEFAULT_URL = 'https://msqcgxmwhcodhhkynunq.supabase.co';
+const DEFAULT_KEY = 'sb_publishable_Gnx7SS1CZ_L-K9YpdRVQ3g_j-RLKo62';
+
 export function getSupabaseConfig(): { url: string; key: string } {
-  let url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  let key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_URL;
+  let key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_KEY;
 
   if (typeof window !== 'undefined') {
     const localUrl = localStorage.getItem(STORAGE_URL_KEY);
