@@ -9,11 +9,15 @@ CREATE TABLE IF NOT EXISTS public.users (
     email TEXT,
     password TEXT,
     username TEXT NOT NULL,
-    role TEXT CHECK (role IN ('ADMIN', 'CASHIER')) DEFAULT 'CASHIER',
+    role TEXT CHECK (role IN ('SUPERADMIN', 'ADMIN', 'CASHIER')) DEFAULT 'CASHIER',
     pin TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Actualizar restricción de roles si la tabla ya existía
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE public.users ADD CONSTRAINT users_role_check CHECK (role IN ('SUPERADMIN', 'ADMIN', 'CASHIER'));
 
 -- 1. TABLA: PRODUCTOS
 CREATE TABLE IF NOT EXISTS public.products (
