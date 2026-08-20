@@ -14,6 +14,7 @@ import {
 import { Sale, Expense, Debt, ExchangeRate } from '../../lib/types';
 import { formatUSD, formatVES } from '../../lib/bimonetary/exchangeRate';
 import { clearAllLocalData } from '../../lib/db/indexeddb';
+import { pullAllFromSupabase } from '../../lib/sync/syncEngine';
 
 interface FinancialDashboardProps {
   sales: Sale[];
@@ -93,9 +94,11 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({
     .reduce((sum, d) => sum + d.amount_usd, 0);
 
   const handleReset = async () => {
-    if (window.confirm('¿Deseas vaciar y limpiar toda la base de datos (ventas, deudas, gastos, clientes y productos) para empezar desde cero?')) {
+    if (window.confirm('¿Deseas limpiar todos los datos locales obsoletos y resincronizar exactamente con la nube?')) {
       await clearAllLocalData();
+      await pullAllFromSupabase();
       onResetData();
+      alert('¡Datos locales limpiados y resincronizados con la nube con éxito!');
     }
   };
 
