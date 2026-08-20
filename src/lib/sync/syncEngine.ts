@@ -18,95 +18,113 @@ export async function processSyncQueue(): Promise<{ processed: number; errors: n
     const queue: SyncQueueItem[] = await db.getAll('syncQueue');
 
     if (queue.length === 0) {
-      isProcessingSync = false;
       return { processed: 0, errors: 0 };
     }
 
-  let processedCount = 0;
-  let errorCount = 0;
+    let processedCount = 0;
+    let errorCount = 0;
 
-  queue.sort((a, b) => a.timestamp - b.timestamp);
+    queue.sort((a, b) => a.timestamp - b.timestamp);
 
-  for (const item of queue) {
-    try {
-      const { table_name, action, data } = item;
+    for (const item of queue) {
+      try {
+        const { table_name, action, data } = item;
 
-      if (action === 'INSERT') {
-        const { error } = await supabase.from(table_name).upsert(data);
-        if (error) throw error;
-      } else if (action === 'UPDATE') {
-        const { error } = await supabase.from(table_name).update(data).eq('id', data.id);
-        if (error) throw error;
-      } else if (action === 'DELETE') {
-        const { error } = await supabase.from(table_name).delete().eq('id', data.id);
-        if (error) throw error;
+        if (action === 'INSERT') {
+          const { error } = await supabase.from(table_name).upsert(data);
+          if (error) throw error;
+        } else if (action === 'UPDATE') {
+          const { error } = await supabase.from(table_name).update(data).eq('id', data.id);
+          if (error) throw error;
+        } else if (action === 'DELETE') {
+          const { error } = await supabase.from(table_name).delete().eq('id', data.id);
+          if (error) throw error;
+        }
+
+        await deleteFromStore('syncQueue', item.id);
+        processedCount++;
+      } catch (err) {
+        console.error(`Error sincronizando item ${item.id} (${item.table_name}):`, err);
+        errorCount++;
+        item.retries = (item.retries || 0) + 1;
+        await db.put('syncQueue', item);
       }
-
-      await deleteFromStore('syncQueue', item.id);
-      processedCount++;
-    } catch (err) {
-      console.error(`Error sincronizando item ${item.id} (${item.table_name}):`, err);
-      errorCount++;
-      item.retries = (item.retries || 0) + 1;
-      await db.put('syncQueue', item);
     }
-  }
 
-  return { processed: processedCount, errors: errorCount };
+    return { processed: processedCount, errors: errorCount };
   } finally {
     isProcessingSync = false;
   }
 }
 
 /**
- * Descarga todos los registros de Supabase a IndexedDB para sincronización inicial o periódica
+ * Reconciliación completa: Descarga la verdad canónica desde Supabase y actualiza IndexedDB
+ * asegurando que todos los dispositivos tengan EXACTAMENTE los mismos datos.
  */
 export async function pullAllFromSupabase(): Promise<{ success: boolean; count: number }> {
   const supabase = getSupabaseClient();
   if (!supabase) return { success: false, count: 0 };
 
   try {
+    const db = await getDB();
     let totalCount = 0;
 
     // 1. Productos
-    const { data: prods } = await supabase.from('products').select('*');
-    if (prods && prods.length > 0) {
-      for (const p of prods) await putToStore('products', p);
+    const { data: prods, error: pErr } = await supabase.from('products').select('*');
+    if (!pErr && prods) {
+      const tx = db.transaction('products', 'readwrite');
+      await tx.store.clear();
+      for (const p of prods) await tx.store.put(p);
+      await tx.done;
       totalCount += prods.length;
     }
 
     // 2. Clientes
-    const { data: clients } = await supabase.from('clients').select('*');
-    if (clients && clients.length > 0) {
-      for (const c of clients) await putToStore('clients', c);
+    const { data: clients, error: cErr } = await supabase.from('clients').select('*');
+    if (!cErr && clients) {
+      const tx = db.transaction('clients', 'readwrite');
+      await tx.store.clear();
+      for (const c of clients) await tx.store.put(c);
+      await tx.done;
       totalCount += clients.length;
     }
 
     // 3. Ventas
-    const { data: sales } = await supabase.from('sales').select('*');
-    if (sales && sales.length > 0) {
-      for (const s of sales) await putToStore('sales', s);
+    const { data: sales, error: sErr } = await supabase.from('sales').select('*');
+    if (!sErr && sales) {
+      const tx = db.transaction('sales', 'readwrite');
+      await tx.store.clear();
+      for (const s of sales) await tx.store.put(s);
+      await tx.done;
       totalCount += sales.length;
     }
 
     // 4. Deudas / Fiados
-    const { data: debts } = await supabase.from('debts').select('*');
-    if (debts && debts.length > 0) {
-      for (const d of debts) await putToStore('debts', d);
+    const { data: debts, error: dErr } = await supabase.from('debts').select('*');
+    if (!dErr && debts) {
+      const tx = db.transaction('debts', 'readwrite');
+      await tx.store.clear();
+      for (const d of debts) await tx.store.put(d);
+      await tx.done;
       totalCount += debts.length;
     }
 
     // 5. Gastos
-    const { data: expenses } = await supabase.from('expenses').select('*');
-    if (expenses && expenses.length > 0) {
-      for (const e of expenses) await putToStore('expenses', e);
+    const { data: expenses, error: eErr } = await supabase.from('expenses').select('*');
+    if (!eErr && expenses) {
+      const tx = db.transaction('expenses', 'readwrite');
+      await tx.store.clear();
+      for (const e of expenses) await tx.store.put(e);
+      await tx.done;
       totalCount += expenses.length;
     }
 
     // 6. Usuarios
-    const { data: users } = await supabase.from('users').select('*');
-    if (users && users.length > 0) {
-      for (const u of users) await putToStore('users', u);
+    const { data: users, error: uErr } = await supabase.from('users').select('*');
+    if (!uErr && users && users.length > 0) {
+      const tx = db.transaction('users', 'readwrite');
+      for (const u of users) await tx.store.put(u);
+      await tx.done;
       totalCount += users.length;
     }
 
