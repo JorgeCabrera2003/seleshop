@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS public.expenses (
 );
 
 -- =============================================================================
--- POLÍTICAS DE ACCESO RLS (PERMITE LECTURA/ESCRITURA CON ANON KEY)
+-- POLÍTICAS DE ACCESO RLS (IDEMPOTENTES: LECTURA/ESCRITURA CON ANON KEY)
 -- =============================================================================
 
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -111,26 +111,64 @@ ALTER TABLE public.debts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exchange_rates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Acceso total a users" ON public.users;
 CREATE POLICY "Acceso total a users" ON public.users FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a products" ON public.products;
 CREATE POLICY "Acceso total a products" ON public.products FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a clients" ON public.clients;
 CREATE POLICY "Acceso total a clients" ON public.clients FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a sales" ON public.sales;
 CREATE POLICY "Acceso total a sales" ON public.sales FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a sale_items" ON public.sale_items;
 CREATE POLICY "Acceso total a sale_items" ON public.sale_items FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a debts" ON public.debts;
 CREATE POLICY "Acceso total a debts" ON public.debts FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a expenses" ON public.expenses;
 CREATE POLICY "Acceso total a expenses" ON public.expenses FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a exchange_rates" ON public.exchange_rates;
 CREATE POLICY "Acceso total a exchange_rates" ON public.exchange_rates FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================================================
 -- HABILITAR REALTIME PARA SINCRONIZACIÓN EN VIVO MULTIDISPOSITIVO
 -- =============================================================================
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.clients;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.sales;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.sale_items;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.debts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.clients;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.sales;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.sale_items;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.debts;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+END $$;
 
 -- =============================================================================
 -- INSERCIÓN INICIAL DE USUARIOS AUTORIZADOS
