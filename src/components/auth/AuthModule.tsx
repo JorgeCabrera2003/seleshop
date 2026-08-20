@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, ShieldCheck, KeyRound, UserPlus, ArrowRight, AlertTriangle, Check, Delete, Mail, Lock, Sparkles, RefreshCw } from 'lucide-react';
+import { User, ShieldCheck, KeyRound, UserPlus, ArrowRight, AlertTriangle, Check, Delete, Mail, Lock, Sparkles, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { User as UserType, AuthSession } from '../../lib/types';
 import { putToStore, addToSyncQueue, setActiveSession } from '../../lib/db/indexeddb';
 import { pullAllFromSupabase } from '../../lib/sync/syncEngine';
@@ -30,6 +30,7 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
   const [pin, setPin] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -390,13 +391,21 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-700 rounded-xl pl-10 pr-3 py-3 text-stone-100 text-sm font-semibold focus:outline-none focus:border-amber-500"
+                    className="w-full bg-stone-950 border border-stone-700 rounded-xl pl-10 pr-10 py-3 text-stone-100 text-sm font-semibold focus:outline-none focus:border-amber-500"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-200 p-1"
+                    title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 

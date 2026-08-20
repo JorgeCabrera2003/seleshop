@@ -19,6 +19,7 @@ interface HeaderProps {
   onLogout?: () => void;
   onOpenUserManager?: () => void;
   onOpenCloudSync?: () => void;
+  onOpenProfileSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenUserManager,
   onOpenCloudSync,
+  onOpenProfileSettings,
 }) => {
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -205,7 +207,29 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {/* 4. Theme Toggle Option */}
+              {/* 4. Profile & Security (Change PIN/Password) */}
+              {onOpenProfileSettings && (
+                <button
+                  onClick={() => {
+                    onOpenProfileSettings();
+                    setShowSettingsMenu(false);
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800 hover:border-stone-700 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-stone-400" />
+                    <div>
+                      <span className="text-xs font-bold text-stone-200 block">Mi Perfil & Seguridad</span>
+                      <span className="text-[10px] text-stone-500">Cambiar PIN, correo o contraseña</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-stone-800 text-stone-300 font-bold px-2 py-0.5 rounded border border-stone-700">
+                    Editar
+                  </span>
+                </button>
+              )}
+
+              {/* 5. Theme Toggle Option */}
               <div className="flex items-center justify-between p-2.5 rounded-2xl bg-stone-950 border border-stone-800">
                 <span className="text-xs font-bold text-stone-300">Modo de Pantalla</span>
                 <button

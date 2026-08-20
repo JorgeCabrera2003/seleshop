@@ -12,6 +12,7 @@ import { FinancialDashboard } from '../components/dashboard/FinancialDashboard';
 import { DollarHistoryModule } from '../components/dolar/DollarHistoryModule';
 import { AuthModule } from '../components/auth/AuthModule';
 import { UserManagerModal } from '../components/auth/UserManagerModal';
+import { ProfileSettingsModal } from '../components/auth/ProfileSettingsModal';
 import { CloudSyncModal } from '../components/sync/CloudSyncModal';
 import { Product, Client, Sale, Debt, Expense, ExchangeRate, NavigationTab, User, AuthSession } from '../lib/types';
 import { seedInitialDataIfEmpty, getAllFromStore, getDB, getActiveSession, clearActiveSession } from '../lib/db/indexeddb';
@@ -30,6 +31,7 @@ export default function HomePage() {
   const [currentSession, setCurrentSession] = useState<AuthSession | null>(null);
   const [showUserManager, setShowUserManager] = useState(false);
   const [showCloudSync, setShowCloudSync] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
 
   // App Data State
   const [products, setProducts] = useState<Product[]>([]);
@@ -229,6 +231,7 @@ export default function HomePage() {
         onLogout={handleLogout}
         onOpenUserManager={() => setShowUserManager(true)}
         onOpenCloudSync={() => setShowCloudSync(true)}
+        onOpenProfileSettings={() => setShowProfileSettings(true)}
       />
 
       {/* Main View Router */}
@@ -319,6 +322,19 @@ export default function HomePage() {
           onClose={() => setShowCloudSync(false)}
           syncQueueCount={syncQueueCount}
           onSyncCompleted={loadDataFromIndexedDB}
+        />
+      )}
+
+      {/* Profile & Security Settings Modal (Change PIN / Password) */}
+      {showProfileSettings && (
+        <ProfileSettingsModal
+          currentUser={currentUser}
+          isOpen={showProfileSettings}
+          onClose={() => setShowProfileSettings(false)}
+          onProfileUpdated={(updated) => {
+            setCurrentSession({ user: updated, logged_at: new Date().toISOString() });
+            loadDataFromIndexedDB();
+          }}
         />
       )}
 

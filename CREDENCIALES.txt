@@ -1,0 +1,32 @@
+================================================================================
+                        SELESHOP POS - CREDENCIALES DEL SISTEMA
+================================================================================
+
+1. SUPERADMIN (CONTROL TOTAL Y GESTIÓN DE USUARIOS)
+--------------------------------------------------------------------------------
+Usuario / Nombre : Jorge Cabrera
+Rol              : SUPERADMIN
+Correo           : jorge@seleshop.com
+Contraseña       : Jorge#Seleshop2026!
+PIN de Acceso    : 8492
+Permisos         : Acceso total al sistema, auditoría financiera, creación y 
+                   gestión de usuarios/cajeros, y configuración de base de datos.
+
+--------------------------------------------------------------------------------
+
+2. ADMIN (USO DIARIO Y GESTIÓN DE LA TIENDA)
+--------------------------------------------------------------------------------
+Usuario / Nombre : Sele
+Rol              : ADMIN
+Correo           : sele@seleshop.com
+Contraseña       : Sele*Tienda2026$
+PIN de Acceso    : 7361
+Permisos         : Acceso a todas las operaciones comerciales diarias: 
+                   Punto de Venta (POS), Inventario, Clientes, Deudas/Fiados, 
+                   Gastos, Dashboard Financiero y Tasas del BCV.
+
+================================================================================
+NOTA DE SEGURIDAD:
+- Puedes cambiar tu PIN o contraseña en cualquier momento desde el menú 
+  "Ajustes > Mi Perfil y Seguridad" dentro de la aplicación.
+================================================================================

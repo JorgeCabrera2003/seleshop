@@ -131,3 +131,19 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.sales;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.sale_items;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.debts;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
+
+-- =============================================================================
+-- INSERCIÓN INICIAL DE USUARIOS AUTORIZADOS
+-- =============================================================================
+
+INSERT INTO public.users (id, name, email, password, username, role, pin, is_active)
+VALUES 
+  ('usr-superadmin-jorge', 'Jorge Cabrera', 'jorge@seleshop.com', 'Jorge#Seleshop2026!', 'jorge', 'SUPERADMIN', '8492', true),
+  ('usr-admin-sele', 'Sele', 'sele@seleshop.com', 'Sele*Tienda2026$', 'sele', 'ADMIN', '7361', true)
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  email = EXCLUDED.email,
+  password = EXCLUDED.password,
+  role = EXCLUDED.role,
+  pin = EXCLUDED.pin,
+  is_active = EXCLUDED.is_active;
