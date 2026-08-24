@@ -19,7 +19,7 @@ export async function getDB(): Promise<IDBPDatabase> {
 
 // Session Management Helpers in LocalStorage
 const SESSION_KEY = 'seleshop_active_session';
-const CLEAN_KEY = 'seleshop_db_cleaned_v4';
+const CLEAN_KEY = 'seleshop_db_cleaned_v5';
 
 export function getActiveSession(): AuthSession | null {
   if (typeof window === 'undefined') return null;
@@ -53,9 +53,13 @@ export async function seedInitialDataIfEmpty(forceReseed = false) {
   }
 
   if (forceReseed) {
-    const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'syncQueue'];
+    const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'syncQueue', 'users'];
     for (const s of stores) {
-      await db.clear(s);
+      try {
+        await db.clear(s);
+      } catch (err) {
+        console.warn(`Could not clear store ${s}:`, err);
+      }
     }
   }
 
@@ -71,13 +75,18 @@ export async function seedInitialDataIfEmpty(forceReseed = false) {
     await db.put('exchange_rates', initialRate);
   }
 
-  // Seed default 2 users: Jorge Cabrera (SUPERADMIN) & Sele (ADMIN)
+  // Clean legacy users if any exist
+  try {
+    await db.delete('users', 'usr-superadmin-jorge');
+  } catch {}
+
+  // Seed default 2 users: SuperAdmin (SUPERADMIN) & Sele (ADMIN)
   const defaultSuperAdmin: User = {
-    id: 'usr-superadmin-jorge',
-    name: 'Jorge Cabrera',
-    email: 'jorge@seleshop.com',
-    password: 'Jorge#Seleshop2026!',
-    username: 'jorge',
+    id: 'usr-superadmin',
+    name: 'SuperAdmin',
+    email: 'superadmin@seleshop.com',
+    password: 'SuperAdmin#Seleshop2026!',
+    username: 'superadmin',
     role: 'SUPERADMIN',
     pin: '8492',
     is_active: true,
@@ -96,8 +105,17 @@ export async function seedInitialDataIfEmpty(forceReseed = false) {
     created_at: new Date().toISOString(),
   };
 
-  await db.put('users', defaultSuperAdmin);
-  await db.put('users', defaultAdminSele);
+  const userCount = await db.count('users');
+  if (userCount === 0 || forceReseed) {
+    await db.put('users', defaultSuperAdmin);
+    await db.put('users', defaultAdminSele);
+  } else {
+    // If superadmin doesn't exist, ensure it is added
+    const existingSuper = await db.get('users', 'usr-superadmin');
+    if (!existingSuper) {
+      await db.put('users', defaultSuperAdmin);
+    }
+  }
 }
 
 // Calculate 15th or 30th payment date rule
@@ -169,10 +187,17 @@ export async function getHistoricalRateFromDB(date: string): Promise<HistoricalR
 
 export async function clearAllLocalData() {
   const db = await getDB();
-  const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue'];
+  const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users'];
   for (const s of stores) {
-    await db.clear(s);
+    try {
+      await db.clear(s);
+    } catch (err) {
+      console.warn(`Error clearing store ${s}:`, err);
+    }
   }
-  clearActiveSession();
+  if (typeof window !== 'undefined') {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
   await seedInitialDataIfEmpty(true);
 }

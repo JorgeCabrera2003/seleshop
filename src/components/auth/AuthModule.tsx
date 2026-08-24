@@ -17,15 +17,29 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
   onLoginSuccess,
   onRefreshUsers,
 }) => {
+  // Operational users for fast PIN access (Excludes SuperAdmin)
+  const quickAccessUsers = users.filter((u) => u.is_active && u.role !== 'SUPERADMIN');
+  const allActiveUsers = users.filter((u) => u.is_active);
+
   // Login Mode: 'PIN' | 'PASSWORD' | 'REGISTER'
   const [authMode, setAuthMode] = useState<'PIN' | 'PASSWORD' | 'REGISTER'>(() => {
-    return users.filter((u) => u.is_active).length === 0 ? 'REGISTER' : 'PIN';
+    if (quickAccessUsers.length > 0) return 'PIN';
+    if (allActiveUsers.length > 0) return 'PASSWORD';
+    return 'REGISTER';
   });
 
   const [selectedUser, setSelectedUser] = useState<UserType | null>(() => {
-    const active = users.filter((u) => u.is_active);
-    return active.length > 0 ? active[0] : null;
+    return quickAccessUsers.length > 0 ? quickAccessUsers[0] : null;
   });
+
+  // Keep selected user in sync with quick access users
+  React.useEffect(() => {
+    if (selectedUser && !quickAccessUsers.some((u) => u.id === selectedUser.id)) {
+      setSelectedUser(quickAccessUsers.length > 0 ? quickAccessUsers[0] : null);
+    } else if (!selectedUser && quickAccessUsers.length > 0) {
+      setSelectedUser(quickAccessUsers[0]);
+    }
+  }, [users, quickAccessUsers, selectedUser]);
 
   const [pin, setPin] = useState('');
   const [emailInput, setEmailInput] = useState('');
@@ -41,7 +55,7 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
   const [regPin, setRegPin] = useState('');
   const [regPinConfirm, setRegPinConfirm] = useState('');
 
-  const activeUsers = users.filter((u) => u.is_active);
+  const activeUsers = allActiveUsers;
 
   // Keypad numeric press for Fast PIN
   const handleKeypadPress = (num: string) => {
@@ -240,51 +254,66 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
           )}
 
           {/* ══════════════════════════════════════════════════════ */}
-          {/* MODO 1: INICIO RÁPIDO POR PIN                          */}
+          {/* MODO 1: INICIO RÁPIDO POR PIN (Excluye SuperAdmin)      */}
           {/* ══════════════════════════════════════════════════════ */}
-          {authMode === 'PIN' && activeUsers.length > 0 && (
+          {authMode === 'PIN' && (
             <div className="space-y-4">
-              
-              {/* User Avatars */}
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-                  Selecciona tu usuario
-                </label>
+              {quickAccessUsers.length > 0 ? (
+                <>
+                  {/* User Avatars */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+                      Acceso Rápido · Selecciona tu usuario
+                    </label>
 
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                  {activeUsers.map((u) => {
-                    const isSelected = selectedUser?.id === u.id;
-                    const isAdmin = u.role === 'ADMIN';
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                      {quickAccessUsers.map((u) => {
+                        const isSelected = selectedUser?.id === u.id;
 
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setPin('');
-                          setErrorMsg(null);
-                        }}
-                        className={`p-2.5 rounded-2xl border-2 flex items-center gap-2.5 text-left transition-all touch-target-lg ${
-                          isSelected
-                            ? 'bg-amber-900/30 border-[#D4AF37] text-stone-100'
-                            : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-stone-200'
-                        }`}
-                      >
-                        <div className="w-8 h-8 rounded-xl bg-stone-800 border border-stone-700 flex items-center justify-center font-bold text-xs text-stone-200 shrink-0">
-                          {u.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="font-extrabold text-xs text-stone-100 block truncate">{u.name}</span>
-                          <span className="text-[10px] text-stone-400 font-semibold block">
-                            {u.role === 'SUPERADMIN' ? 'SuperAdmin' : u.role === 'ADMIN' ? 'Admin' : 'Cajero'}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setPin('');
+                              setErrorMsg(null);
+                            }}
+                            className={`p-2.5 rounded-2xl border-2 flex items-center gap-2.5 text-left transition-all touch-target-lg ${
+                              isSelected
+                                ? 'bg-amber-900/30 border-[#D4AF37] text-stone-100'
+                                : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-stone-200'
+                            }`}
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-stone-800 border border-stone-700 flex items-center justify-center font-bold text-xs text-stone-200 shrink-0">
+                              {u.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <span className="font-extrabold text-xs text-stone-100 block truncate">{u.name}</span>
+                              <span className="text-[10px] text-stone-400 font-semibold block">
+                                {u.role === 'ADMIN' ? 'Admin' : 'Cajero'}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6 space-y-3 bg-stone-950 p-4 rounded-2xl border border-stone-800">
+                  <p className="text-xs text-stone-400">
+                    No hay usuarios operativos en acceso rápido. Inicia sesión con tus credenciales de SuperAdmin o correo.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode('PASSWORD')}
+                    className="px-4 py-2 bg-amber-800 hover:bg-amber-700 text-stone-100 text-xs font-bold rounded-xl border border-[#D4AF37]/50"
+                  >
+                    Ir a Correo / Clave
+                  </button>
                 </div>
-              </div>
+              )}
 
               {/* PIN Keypad & Dots */}
               {selectedUser && (

@@ -180,7 +180,7 @@ END $$;
 
 INSERT INTO public.users (id, name, email, password, username, role, pin, is_active)
 VALUES 
-  ('usr-superadmin-jorge', 'Jorge Cabrera', 'jorge@seleshop.com', 'Jorge#Seleshop2026!', 'jorge', 'SUPERADMIN', '8492', true),
+  ('usr-superadmin', 'SuperAdmin', 'superadmin@seleshop.com', 'SuperAdmin#Seleshop2026!', 'superadmin', 'SUPERADMIN', '8492', true),
   ('usr-admin-sele', 'Sele', 'sele@seleshop.com', 'Sele*Tienda2026$', 'sele', 'ADMIN', '7361', true)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,

@@ -4,11 +4,14 @@
 
 1. SUPERADMIN (CONTROL TOTAL Y GESTIÓN DE USUARIOS)
 --------------------------------------------------------------------------------
-Usuario / Nombre : Jorge Cabrera
+Usuario / Nombre : SuperAdmin
 Rol              : SUPERADMIN
-Correo           : jorge@seleshop.com
-Contraseña       : Jorge#Seleshop2026!
+Correo           : superadmin@seleshop.com
+Contraseña       : SuperAdmin#Seleshop2026!
 PIN de Acceso    : 8492
+Inicio de Sesión : Por seguridad, este usuario NO aparece en el Acceso Rápido (PIN).
+                   Para acceder, ingresa por la pestaña "Correo / Clave" con el
+                   correo superadmin@seleshop.com (o usuario "superadmin") y su contraseña.
 Permisos         : Acceso total al sistema, auditoría financiera, creación y 
                    gestión de usuarios/cajeros, y configuración de base de datos.
 
@@ -21,6 +24,8 @@ Rol              : ADMIN
 Correo           : sele@seleshop.com
 Contraseña       : Sele*Tienda2026$
 PIN de Acceso    : 7361
+Inicio de Sesión : Disponible en "PIN Rápido" (Acceso Rápido) seleccionando su tarjeta
+                   o por "Correo / Clave".
 Permisos         : Acceso a todas las operaciones comerciales diarias: 
                    Punto de Venta (POS), Inventario, Clientes, Deudas/Fiados, 
                    Gastos, Dashboard Financiero y Tasas del BCV.
@@ -29,4 +34,5 @@ Permisos         : Acceso a todas las operaciones comerciales diarias:
 NOTA DE SEGURIDAD:
 - Puedes cambiar tu PIN o contraseña en cualquier momento desde el menú 
   "Ajustes > Mi Perfil y Seguridad" dentro de la aplicación.
+- Puedes agregar nuevos cajeros o administradores desde el menú de SuperAdmin.
 ================================================================================

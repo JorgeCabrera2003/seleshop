@@ -94,11 +94,10 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({
     .reduce((sum, d) => sum + d.amount_usd, 0);
 
   const handleReset = async () => {
-    if (window.confirm('¿Deseas limpiar todos los datos locales obsoletos y resincronizar exactamente con la nube?')) {
+    if (window.confirm('¿Deseas limpiar por completo la base de datos local, borrar el LocalStorage y restablecer los usuarios por defecto?')) {
       await clearAllLocalData();
-      await pullAllFromSupabase();
-      onResetData();
-      alert('¡Datos locales limpiados y resincronizados con la nube con éxito!');
+      alert('¡Base de datos y LocalStorage limpiados con éxito! Los usuarios por defecto han sido restaurados.');
+      window.location.reload();
     }
   };
 
