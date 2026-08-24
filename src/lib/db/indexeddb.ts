@@ -19,7 +19,7 @@ export async function getDB(): Promise<IDBPDatabase> {
 
 // Session Management Helpers in LocalStorage
 const SESSION_KEY = 'seleshop_active_session';
-const CLEAN_KEY = 'seleshop_db_cleaned_v5';
+const CLEAN_KEY = 'seleshop_db_cleaned_v6';
 
 export function getActiveSession(): AuthSession | null {
   if (typeof window === 'undefined') return null;
@@ -186,6 +186,46 @@ export async function getHistoricalRateFromDB(date: string): Promise<HistoricalR
 }
 
 export async function clearAllLocalData() {
+  // 1. Wipe Supabase Cloud if configured & online
+  try {
+    const { getSupabaseClient } = await import('../supabase/client');
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      await supabase.from('sale_items').delete().neq('id', '___none___');
+      await supabase.from('sales').delete().neq('id', '___none___');
+      await supabase.from('debts').delete().neq('id', '___none___');
+      await supabase.from('expenses').delete().neq('id', '___none___');
+      await supabase.from('products').delete().neq('id', '___none___');
+      await supabase.from('clients').delete().neq('id', '___none___');
+      await supabase.from('users').delete().neq('id', '___none___');
+      await supabase.from('users').upsert([
+        {
+          id: 'usr-superadmin',
+          name: 'SuperAdmin',
+          email: 'superadmin@seleshop.com',
+          password: 'SuperAdmin#Seleshop2026!',
+          username: 'superadmin',
+          role: 'SUPERADMIN',
+          pin: '8492',
+          is_active: true,
+        },
+        {
+          id: 'usr-admin-sele',
+          name: 'Sele',
+          email: 'sele@seleshop.com',
+          password: 'Sele*Tienda2026$',
+          username: 'sele',
+          role: 'ADMIN',
+          pin: '7361',
+          is_active: true,
+        },
+      ]);
+    }
+  } catch (err) {
+    console.warn('Could not clear Supabase cloud tables:', err);
+  }
+
+  // 2. Clear all local IndexedDB stores
   const db = await getDB();
   const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users'];
   for (const s of stores) {
@@ -195,9 +235,14 @@ export async function clearAllLocalData() {
       console.warn(`Error clearing store ${s}:`, err);
     }
   }
+
+  // 3. Clear browser local storage
   if (typeof window !== 'undefined') {
     localStorage.clear();
     sessionStorage.clear();
+    localStorage.setItem(CLEAN_KEY, 'true');
   }
+
+  // 4. Restore default users locally
   await seedInitialDataIfEmpty(true);
 }
