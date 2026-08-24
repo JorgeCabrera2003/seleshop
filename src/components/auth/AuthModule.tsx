@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, ShieldCheck, KeyRound, UserPlus, ArrowRight, AlertTriangle, Check, Delete, Mail, Lock, Sparkles, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { User, ShieldCheck, KeyRound, UserPlus, ArrowRight, AlertTriangle, Check, Delete, Mail, Lock, Sparkles, RefreshCw, Eye, EyeOff, RotateCcw } from 'lucide-react';
 import { User as UserType, AuthSession } from '../../lib/types';
-import { putToStore, addToSyncQueue, setActiveSession } from '../../lib/db/indexeddb';
+import { putToStore, addToSyncQueue, setActiveSession, clearAllLocalData } from '../../lib/db/indexeddb';
 import { pullAllFromSupabase } from '../../lib/sync/syncEngine';
 
 interface AuthModuleProps {
@@ -560,6 +560,23 @@ export const AuthModule: React.FC<AuthModuleProps> = ({
             </form>
           )}
 
+        </div>
+
+        {/* Footer info & emergency reset */}
+        <div className="text-center pt-1">
+          <button
+            type="button"
+            onClick={async () => {
+              if (window.confirm('¿Deseas limpiar todos los datos locales (LocalStorage e IndexedDB) y restaurar los usuarios por defecto?')) {
+                await clearAllLocalData();
+                alert('¡Datos restablecidos con éxito! Recargando...');
+                window.location.reload();
+              }
+            }}
+            className="text-[11px] text-stone-500 hover:text-stone-300 transition-colors inline-flex items-center gap-1 cursor-pointer py-1 px-2 rounded-lg hover:bg-stone-900"
+          >
+            <RotateCcw className="w-3 h-3" /> Restablecer datos locales de fábrica
+          </button>
         </div>
 
       </div>

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wifi, WifiOff, RefreshCw, DollarSign, Database, Edit2, Check, Sun, Moon, History, Settings, X, User, Users, Cloud, LogOut } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, DollarSign, Database, Edit2, Check, Sun, Moon, History, Settings, X, User, Users, Cloud, LogOut, RotateCcw } from 'lucide-react';
 import { ExchangeRate, User as UserType } from '../../lib/types';
-import { putToStore } from '../../lib/db/indexeddb';
+import { putToStore, clearAllLocalData } from '../../lib/db/indexeddb';
 
 interface HeaderProps {
   isOnline: boolean;
@@ -113,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Floating Settings & Options Menu */}
           {showSettingsMenu && (
-            <div className="absolute right-0 top-14 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-stone-900 border-2 border-[#D4AF37] rounded-3xl p-4 shadow-2xl z-50 flex flex-col max-h-[calc(100vh-4.5rem)] animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute right-0 top-14 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-stone-900 border-2 border-[#D4AF37] rounded-3xl p-4 shadow-2xl z-50 flex flex-col max-h-[calc(100dvh-5.5rem)] sm:max-h-[calc(100vh-6rem)] animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between border-b border-stone-800 pb-2.5 mb-2.5 shrink-0">
                 <span className="text-sm font-bold text-stone-200 font-wabi">Menú & Configuración</span>
                 <button
@@ -124,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
 
-              <div className="overflow-y-auto space-y-3.5 pr-1 flex-1 text-left custom-scrollbar">
+              <div className="overflow-y-auto space-y-3 pr-1 flex-1 text-left custom-scrollbar">
                 {/* 1. Tasa BCV del Día */}
                 <div className="bg-stone-950 border-2 border-[#D4AF37]/60 p-3 rounded-2xl space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -276,7 +276,32 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 </div>
 
-                {/* 7. Logout option in menu */}
+                {/* 7. SuperAdmin / Admin: Limpiar Base de Datos */}
+                {isAdmin && (
+                  <button
+                    onClick={async () => {
+                      if (window.confirm('¿Deseas limpiar todos los datos locales (LocalStorage e IndexedDB) y restablecer los usuarios por defecto?')) {
+                        await clearAllLocalData();
+                        alert('¡Base de datos y LocalStorage limpiados con éxito! Los usuarios por defecto han sido restaurados.');
+                        window.location.reload();
+                      }
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-rose-950/20 border border-rose-900/40 hover:border-rose-700/60 hover:bg-rose-900/30 transition-all text-left group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <RotateCcw className="w-4 h-4 text-rose-400 group-hover:rotate-180 transition-transform duration-500 shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-rose-200 block">Limpiar Base de Datos</span>
+                        <span className="text-[10px] text-rose-400/80">Restablecer datos y usuarios por defecto</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-rose-900/50 text-rose-300 font-bold px-2 py-0.5 rounded border border-rose-700/40 shrink-0">
+                      Reset
+                    </span>
+                  </button>
+                )}
+
+                {/* 8. Logout option in menu */}
                 {onLogout && (
                   <button
                     onClick={() => {
