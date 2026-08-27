@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import {
   CreditCard, MessageSquare, CheckCircle, Calendar, DollarSign,
-  User, ChevronDown, ChevronUp, Layers, ListFilter, CheckCheck,
+  User, ChevronDown, ChevronUp, Layers, ListFilter, CheckCheck, Trash2
 } from 'lucide-react';
 import { Debt, Client, ExchangeRate } from '../../lib/types';
 import { formatUSD, formatVES } from '../../lib/bimonetary/exchangeRate';
-import { putToStore, addToSyncQueue } from '../../lib/db/indexeddb';
+import { putToStore, addToSyncQueue, deleteFromStore } from '../../lib/db/indexeddb';
 
 interface DebtsModuleProps {
   debts: Debt[];
@@ -145,6 +145,14 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
     onRefreshDebts();
     setSelectedDebtForPayment(null);
     setPaymentAmountUSD('');
+  };
+
+  const handleDeleteDebt = async (debtId: string) => {
+    if (window.confirm('¿Seguro que deseas eliminar este registro de deuda? Esta acción no se puede deshacer.')) {
+      await deleteFromStore('debts', debtId);
+      await addToSyncQueue({ table_name: 'debts', action: 'DELETE', data: { id: debtId } });
+      onRefreshDebts();
+    }
   };
 
   const handlePayAllForGroupedClient = async (grouped: GroupedClientDebt) => {
@@ -423,6 +431,13 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
                                 Cobrar
                               </button>
                             )}
+                            <button
+                              onClick={() => handleDeleteDebt(itemDebt.id)}
+                              className="px-2 py-1.5 bg-transparent hover:bg-stone-800 text-stone-500 hover:text-[#C0392B] rounded-lg transition-colors"
+                              title="Eliminar deuda"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -504,6 +519,25 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
                         <CheckCircle className="w-4 h-4" /> Cobrar
                       </button>
                     </div>
+                  )}
+                  {isPaid && (
+                    <button
+                      onClick={() => handleDeleteDebt(d.id)}
+                      className="w-full py-2.5 bg-transparent hover:bg-[#C0392B]/10 border border-[#C0392B]/30 text-[#C0392B] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" /> Eliminar registro
+                    </button>
+                  )}
+                  {!isPaid && (
+                     <div className="flex justify-end mt-1">
+                      <button
+                        onClick={() => handleDeleteDebt(d.id)}
+                        className="p-2 text-stone-500 hover:text-[#C0392B] hover:bg-stone-800 rounded-lg transition-colors flex items-center gap-1 text-xs"
+                        title="Eliminar deuda"
+                      >
+                        <Trash2 className="w-4 h-4" /> Eliminar
+                      </button>
+                     </div>
                   )}
                 </div>
               );

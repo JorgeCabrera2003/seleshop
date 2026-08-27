@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, Plus, Search, AlertTriangle } from 'lucide-react';
+import { Package, Plus, Search, AlertTriangle, Edit2, Trash2 } from 'lucide-react';
 import { Product, ExchangeRate, PRODUCT_CATEGORIES } from '../../lib/types';
 import { formatUSD, formatVES } from '../../lib/bimonetary/exchangeRate';
-import { putToStore, addToSyncQueue } from '../../lib/db/indexeddb';
+import { putToStore, addToSyncQueue, deleteFromStore } from '../../lib/db/indexeddb';
 
 interface InventoryModuleProps {
   products: Product[];
@@ -19,6 +19,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<string>(PRODUCT_CATEGORIES[0]);
   const [priceUSD, setPriceUSD] = useState('');
@@ -42,6 +43,34 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
     onRefreshProducts();
   };
 
+  const handleOpenAddModal = () => {
+    setEditingProduct(null);
+    setName('');
+    setCategory(PRODUCT_CATEGORIES[0]);
+    setPriceUSD('');
+    setStock('');
+    setErrorMsg(null);
+    setShowAddModal(true);
+  };
+
+  const handleOpenEditModal = (product: Product) => {
+    setEditingProduct(product);
+    setName(product.name);
+    setCategory(product.category);
+    setPriceUSD(product.price_usd.toString());
+    setStock(product.stock_quantity.toString());
+    setErrorMsg(null);
+    setShowAddModal(true);
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (window.confirm('¿Eliminar este producto del inventario?')) {
+      await deleteFromStore('products', productId);
+      await addToSyncQueue({ table_name: 'products', action: 'DELETE', data: { id: productId } });
+      onRefreshProducts();
+    }
+  };
+
   const handleAddProduct = async () => {
     if (!name.trim() || !priceUSD || !stock) {
       setErrorMsg('Por favor completa todos los campos del producto.');
@@ -56,24 +85,33 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       return;
     }
 
-    const newProd: Product = {
-      id: 'prod-' + Date.now(),
-      name: name.trim(),
-      category: category.trim() || 'Chucherías',
-      price_usd: priceNum,
-      stock_quantity: stockNum,
-      is_active: true,
-      updated_at: new Date().toISOString(),
-    };
+    if (editingProduct) {
+      const updated: Product = {
+        ...editingProduct,
+        name: name.trim(),
+        category: category.trim() || 'Chucherías',
+        price_usd: priceNum,
+        stock_quantity: stockNum,
+        updated_at: new Date().toISOString(),
+      };
+      await putToStore('products', updated);
+      await addToSyncQueue({ table_name: 'products', action: 'UPDATE', data: updated });
+    } else {
+      const newProd: Product = {
+        id: 'prod-' + Date.now(),
+        name: name.trim(),
+        category: category.trim() || 'Chucherías',
+        price_usd: priceNum,
+        stock_quantity: stockNum,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      };
+      await putToStore('products', newProd);
+      await addToSyncQueue({ table_name: 'products', action: 'INSERT', data: newProd });
+    }
 
-    await putToStore('products', newProd);
-    await addToSyncQueue({ table_name: 'products', action: 'INSERT', data: newProd });
     onRefreshProducts();
     setShowAddModal(false);
-    setName('');
-    setPriceUSD('');
-    setStock('');
-    setErrorMsg(null);
   };
 
   return (
@@ -93,7 +131,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
 
         {/* CTA Primario */}
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={handleOpenAddModal}
           className="w-full sm:w-auto py-3 px-5 sm:px-6 bg-amber-800 hover:bg-amber-700 border-2 border-[#D4AF37] text-stone-100 font-black rounded-2xl flex items-center justify-center gap-2 transition-all touch-target-lg"
         >
           <Plus className="w-5 h-5" /> Nuevo Producto
@@ -136,23 +174,43 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     {p.category}
                   </span>
 
-                  {/* Badge de stock */}
-                  <span
-                    className={`text-[11px] sm:text-xs font-black flex items-center gap-1 ${
-                      isOut
-                        ? 'text-[#C0392B]'
+                  <div className="flex items-center gap-2">
+                    {/* Botones de acción */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleOpenEditModal(p)}
+                        className="p-1.5 text-stone-500 hover:text-stone-100 hover:bg-stone-800 rounded-lg transition-colors touch-target-lg flex items-center justify-center"
+                        title="Editar"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(p.id)}
+                        className="p-1.5 text-stone-500 hover:text-[#C0392B] hover:bg-stone-800 rounded-lg transition-colors touch-target-lg flex items-center justify-center"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Badge de stock */}
+                    <span
+                      className={`text-[11px] sm:text-xs font-black flex items-center gap-1 ${
+                        isOut
+                          ? 'text-[#C0392B]'
+                          : isLowStock
+                          ? 'text-amber-400'
+                          : 'text-stone-300'
+                      }`}
+                    >
+                      {(isOut || isLowStock) && <AlertTriangle className="w-3 h-3" />}
+                      {isOut
+                        ? 'Agotado'
                         : isLowStock
-                        ? 'text-amber-400'
-                        : 'text-stone-300'
-                    }`}
-                  >
-                    {(isOut || isLowStock) && <AlertTriangle className="w-3 h-3" />}
-                    {isOut
-                      ? 'Agotado'
-                      : isLowStock
-                      ? `Bajo (${p.stock_quantity} u)`
-                      : `${p.stock_quantity} u`}
-                  </span>
+                        ? `Bajo (${p.stock_quantity} u)`
+                        : `${p.stock_quantity} u`}
+                    </span>
+                  </div>
                 </div>
 
                 <h3 className="text-base font-extrabold text-stone-100 leading-tight">
@@ -209,7 +267,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-stone-900 border-t-2 sm:border-2 border-[#D4AF37] rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg sm:text-xl font-bold text-stone-100 flex items-center gap-2 font-wabi">
-              <Package className="w-5 h-5 text-stone-400" /> Nuevo Producto
+              <Package className="w-5 h-5 text-stone-400" /> {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
             </h3>
 
             {errorMsg && (
@@ -291,7 +349,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 onClick={handleAddProduct}
                 className="px-6 py-3 bg-amber-800 hover:bg-amber-700 text-stone-100 font-black rounded-2xl text-sm border-2 border-[#D4AF37] transition-all touch-target-lg"
               >
-                Guardar Producto
+                {editingProduct ? 'Actualizar Producto' : 'Guardar Producto'}
               </button>
             </div>
           </div>

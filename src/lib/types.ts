@@ -5,6 +5,8 @@ export const PRODUCT_CATEGORIES = [
   'Galletas',
   'Comida Chatarra',
   'Bebidas',
+  'Postres',
+  'Salado',
   'Otros',
 ] as const;
 
