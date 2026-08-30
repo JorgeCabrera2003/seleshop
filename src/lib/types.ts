@@ -115,14 +115,28 @@ export interface HistoricalRate {
   fetched_at: string;
 }
 
+export interface Promotion {
+  id: string;
+  title: string;
+  description: string;
+  discount_type: 'PERCENTAGE' | 'FIXED_USD' | 'SPECIAL_PRICE';
+  discount_value: number;
+  target_type: 'ALL' | 'CATEGORY' | 'PRODUCT';
+  target_id?: string; // Product ID or Category Name
+  badge_text?: string;
+  is_active: boolean;
+  user_id?: string;
+  created_at: string;
+}
+
 export interface SyncQueueItem {
   id: string;
-  table_name: 'products' | 'clients' | 'sales' | 'sale_items' | 'debts' | 'expenses' | 'users';
+  table_name: 'products' | 'clients' | 'sales' | 'sale_items' | 'debts' | 'expenses' | 'users' | 'promotions';
   action: 'INSERT' | 'UPDATE' | 'DELETE';
   data: any;
   timestamp: number;
   retries: number;
 }
 
-export type NavigationTab = 'pos' | 'inventory' | 'clients' | 'debts' | 'dashboard' | 'expenses' | 'dolar';
+export type NavigationTab = 'pos' | 'inventory' | 'clients' | 'debts' | 'promotions' | 'dashboard' | 'expenses' | 'dolar';
 

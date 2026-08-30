@@ -116,7 +116,7 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
       })
       .join('\n');
 
-    const msg = `Hola ${grouped.client_name}, te saludamos de SeleShop. Resumen de tus ${pendingD.length} compras fiadas pendientes:\n\n${itemsSummary}\n\nTotal a pagar: ${formatUSD(totalUSD)} USD (${totalVES})\n(Tasa BCV Oficial: 1 USD = ${rateVES.toFixed(2)} VES)\n\nQuedamos atentos a tu pago. Muchas gracias.`;
+    const msg = `¡Hola ${grouped.client_name}! Te escribo de SeleShop. Te comparto el resumen de tus ${pendingD.length} compras fiadas pendientes:\n\n${itemsSummary}\n\nTotal a pagar: ${formatUSD(totalUSD)} USD (${totalVES})\n(Tasa BCV Oficial: 1 USD = ${rateVES.toFixed(2)} VES)\n\nQuedo atenta a tu pago, ¡muchas gracias!`;
     window.open(`https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -124,7 +124,7 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
     const client     = clients.find((c) => c.id === debt.client_id);
     const cleanPhone = (client?.whatsapp_number || debt.whatsapp_number || '').replace(/[^\d+]/g, '');
     const clientName = client?.full_name || debt.client_name || 'Cliente';
-    const msg = `Hola ${clientName}, te escribimos de SeleShop para recordarte tu saldo pendiente de ${formatUSD(debt.amount_usd)} USD (${formatVES(debt.amount_usd, rateVES)}). Quedamos atentos a tu pago. Muchas gracias.`;
+    const msg = `¡Hola ${clientName}! Espero que estés muy bien. Te escribo de SeleShop para recordarte tu saldo pendiente de ${formatUSD(debt.amount_usd)} USD (${formatVES(debt.amount_usd, rateVES)}). Quedo atenta a tu pago, ¡muchas gracias!`;
     window.open(`https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 

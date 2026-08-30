@@ -1,13 +1,13 @@
 import { openDB, IDBPDatabase } from 'idb';
-import { Product, Client, Sale, Debt, Expense, ExchangeRate, HistoricalRate, SyncQueueItem, User, AuthSession } from '../types';
+import { Product, Client, Sale, Debt, Expense, ExchangeRate, HistoricalRate, SyncQueueItem, User, AuthSession, Promotion } from '../types';
 
 const DB_NAME = 'seleshop-db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 export async function getDB(): Promise<IDBPDatabase> {
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {
-      const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users'];
+      const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users', 'promotions'];
       for (const s of stores) {
         if (!db.objectStoreNames.contains(s)) {
           db.createObjectStore(s, { keyPath: s === 'historical_rates' ? 'date' : 'id' });
@@ -53,7 +53,7 @@ export async function seedInitialDataIfEmpty(forceReseed = false) {
   }
 
   if (forceReseed) {
-    const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'syncQueue', 'users'];
+    const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'syncQueue', 'users', 'promotions'];
     for (const s of stores) {
       try {
         await db.clear(s);
@@ -227,7 +227,7 @@ export async function clearAllLocalData() {
 
   // 2. Clear all local IndexedDB stores
   const db = await getDB();
-  const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users'];
+  const stores = ['products', 'clients', 'sales', 'sale_items', 'debts', 'expenses', 'exchange_rates', 'historical_rates', 'syncQueue', 'users', 'promotions'];
   for (const s of stores) {
     try {
       await db.clear(s);

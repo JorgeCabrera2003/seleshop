@@ -128,6 +128,16 @@ export async function pullAllFromSupabase(): Promise<{ success: boolean; count: 
       totalCount += users.length;
     }
 
+    // 7. Promociones
+    const { data: promos, error: prErr } = await supabase.from('promotions').select('*');
+    if (!prErr && promos) {
+      const tx = db.transaction('promotions', 'readwrite');
+      await tx.store.clear();
+      for (const p of promos) await tx.store.put(p);
+      await tx.done;
+      totalCount += promos.length;
+    }
+
     return { success: true, count: totalCount };
   } catch (err) {
     console.error('Error al descargar datos desde Supabase:', err);

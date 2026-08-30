@@ -3,20 +3,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Minus, Trash2, CheckCircle2, User, UserPlus, CreditCard, DollarSign, AlertTriangle, Check, X, ShoppingBag } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Product, Client, Sale, SaleItem, Debt, ExchangeRate, PRODUCT_CATEGORIES } from '../../lib/types';
+import { Product, Client, Sale, SaleItem, Debt, ExchangeRate, PRODUCT_CATEGORIES, Promotion } from '../../lib/types';
 import { formatUSD, formatVES } from '../../lib/bimonetary/exchangeRate';
 import { putToStore, addToSyncQueue, getNextPaymentDate } from '../../lib/db/indexeddb';
 
 interface POSModuleProps {
   products: Product[];
   clients: Client[];
+  promotions?: Promotion[];
   bcvRate: ExchangeRate | null;
   onSaleComplete: () => void;
   onAddClient: (newClient: Client) => void;
 }
 
 export const POSModule: React.FC<POSModuleProps> = ({
-  products, clients, bcvRate, onSaleComplete, onAddClient,
+  products, clients, promotions = [], bcvRate, onSaleComplete, onAddClient,
 }) => {
   const [searchQuery, setSearchQuery]         = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('TODOS');
@@ -43,11 +44,13 @@ export const POSModule: React.FC<POSModuleProps> = ({
     return ['TODOS', ...sorted, ...remaining];
   }, [products]);
 
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch   = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'TODOS' || p.category === selectedCategory;
-    return matchesSearch && matchesCategory && p.is_active;
-  });
+  const filteredProducts = products
+    .filter((p) => {
+      const matchesSearch   = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'TODOS' || p.category === selectedCategory;
+      return matchesSearch && matchesCategory && p.is_active;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
 
   const filteredClients = clients.filter(
     (c) =>
@@ -231,6 +234,14 @@ export const POSModule: React.FC<POSModuleProps> = ({
             {filteredProducts.map((product) => {
               const inCart = cart.find((item) => item.product.id === product.id);
               const isOut  = product.stock_quantity <= 0;
+              const activePromo = promotions.find(
+                (p) =>
+                  p.is_active &&
+                  (p.target_type === 'ALL' ||
+                    (p.target_type === 'CATEGORY' && p.target_id === product.category) ||
+                    (p.target_type === 'PRODUCT' && p.target_id === product.id))
+              );
+
               return (
                 <div
                   key={product.id}
@@ -244,8 +255,13 @@ export const POSModule: React.FC<POSModuleProps> = ({
                   }`}
                 >
                   {inCart && (
-                    <span className="absolute -top-2 -right-2 bg-amber-500 text-stone-950 font-black text-[10px] px-2 py-0.5 rounded-full shadow-md border border-stone-900">
+                    <span className="absolute -top-2 -right-2 bg-amber-500 text-stone-950 font-black text-[10px] px-2 py-0.5 rounded-full shadow-md border border-stone-900 z-10">
                       x{inCart.quantity}
+                    </span>
+                  )}
+                  {activePromo && !inCart && (
+                    <span className="absolute -top-2 -right-2 bg-amber-400 text-stone-950 font-black text-[9px] px-2 py-0.5 rounded-full shadow-md border border-stone-900 uppercase tracking-tighter">
+                      🏷️ {activePromo.badge_text || 'PROMO'}
                     </span>
                   )}
                   <div>

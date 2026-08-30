@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart, Package, Users, CreditCard, LayoutDashboard, Receipt, History } from 'lucide-react';
+import { ShoppingCart, Package, Users, CreditCard, LayoutDashboard, Receipt, History, Tag } from 'lucide-react';
 import { NavigationTab, User as UserType } from '../../lib/types';
 
 interface NavbarProps {
@@ -15,15 +15,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange, cartCoun
   const isCashier = currentUser?.role === 'CASHIER';
 
   // Orden ergonómico optimizado para móvil:
-  // Vender -> Inventario -> Clientes -> Deudas -> Gastos -> Dashboard -> Tasas
+  // Vender -> Inventario -> Clientes -> Deudas -> Promos -> Gastos -> Dashboard -> Tasas
   const navItems: { id: NavigationTab; label: string; icon: React.ComponentType<{ className?: string }>; adminOnly?: boolean }[] = [
-    { id: 'pos',       label: 'Vender',     icon: ShoppingCart },
-    { id: 'inventory', label: 'Inventario', icon: Package },
-    { id: 'clients',   label: 'Clientes',   icon: Users },
-    { id: 'debts',     label: 'Deudas',     icon: CreditCard },
-    { id: 'expenses',  label: 'Gastos',     icon: Receipt }, // Visible en teléfono siempre
-    { id: 'dashboard', label: 'Dashboard',  icon: LayoutDashboard, adminOnly: true },
-    { id: 'dolar',     label: 'Tasas $',    icon: History },
+    { id: 'pos',        label: 'Vender',     icon: ShoppingCart },
+    { id: 'inventory',  label: 'Inventario', icon: Package },
+    { id: 'clients',    label: 'Clientes',   icon: Users },
+    { id: 'debts',      label: 'Deudas',     icon: CreditCard },
+    { id: 'promotions', label: 'Promos',     icon: Tag },
+    { id: 'expenses',   label: 'Gastos',     icon: Receipt },
+    { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard, adminOnly: true },
+    { id: 'dolar',      label: 'Tasas $',    icon: History },
   ];
 
   const visibleNavItems = navItems.filter((item) => !isCashier || !item.adminOnly);

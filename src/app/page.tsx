@@ -8,13 +8,14 @@ import { InventoryModule } from '../components/inventory/InventoryModule';
 import { ClientsModule } from '../components/clients/ClientsModule';
 import { DebtsModule } from '../components/debts/DebtsModule';
 import { ExpensesModule } from '../components/expenses/ExpensesModule';
+import { PromotionsModule } from '../components/promotions/PromotionsModule';
 import { FinancialDashboard } from '../components/dashboard/FinancialDashboard';
 import { DollarHistoryModule } from '../components/dolar/DollarHistoryModule';
 import { AuthModule } from '../components/auth/AuthModule';
 import { UserManagerModal } from '../components/auth/UserManagerModal';
 import { ProfileSettingsModal } from '../components/auth/ProfileSettingsModal';
 import { CloudSyncModal } from '../components/sync/CloudSyncModal';
-import { Product, Client, Sale, Debt, Expense, ExchangeRate, NavigationTab, User, AuthSession } from '../lib/types';
+import { Product, Client, Sale, Debt, Expense, ExchangeRate, NavigationTab, User, AuthSession, Promotion } from '../lib/types';
 import { seedInitialDataIfEmpty, getAllFromStore, getDB, getActiveSession, clearActiveSession } from '../lib/db/indexeddb';
 import { fetchCurrentBCVRate } from '../lib/bimonetary/exchangeRate';
 import { processSyncQueue, pullAllFromSupabase, subscribeToSupabaseRealtime } from '../lib/sync/syncEngine';
@@ -39,6 +40,7 @@ export default function HomePage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [debts, setDebts] = useState<Debt[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(false);
 
   // Theme Auto-Detection & Toggle Logic
@@ -72,6 +74,7 @@ export default function HomePage() {
       const d = await getAllFromStore<Debt>('debts');
       const e = await getAllFromStore<Expense>('expenses');
       const u = await getAllFromStore<User>('users');
+      const pr = await getAllFromStore<Promotion>('promotions');
 
       setProducts(p);
       setClients(c);
@@ -79,6 +82,7 @@ export default function HomePage() {
       setDebts(d);
       setExpenses(e);
       setUsers(u);
+      setPromotions(pr);
 
       // Check active auth session
       const sess = getActiveSession();
@@ -240,6 +244,7 @@ export default function HomePage() {
           <POSModule
             products={products}
             clients={clients}
+            promotions={promotions}
             bcvRate={bcvRate}
             onSaleComplete={loadDataFromIndexedDB}
             onAddClient={(newClient) => setClients([...clients, newClient])}
@@ -249,6 +254,7 @@ export default function HomePage() {
         {activeTab === 'inventory' && (
           <InventoryModule
             products={products}
+            clients={clients}
             bcvRate={bcvRate}
             onRefreshProducts={loadDataFromIndexedDB}
           />
@@ -259,6 +265,7 @@ export default function HomePage() {
             clients={clients}
             debts={debts}
             sales={sales}
+            promotions={promotions}
             bcvRate={bcvRate}
             onRefreshClients={loadDataFromIndexedDB}
           />
@@ -270,6 +277,15 @@ export default function HomePage() {
             clients={clients}
             bcvRate={bcvRate}
             onRefreshDebts={loadDataFromIndexedDB}
+          />
+        )}
+
+        {activeTab === 'promotions' && (
+          <PromotionsModule
+            promotions={promotions}
+            products={products}
+            clients={clients}
+            onRefreshPromotions={loadDataFromIndexedDB}
           />
         )}
 

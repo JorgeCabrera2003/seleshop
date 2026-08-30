@@ -102,6 +102,21 @@ CREATE TABLE IF NOT EXISTS public.expenses (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 8. TABLA: PROMOCIONES
+CREATE TABLE IF NOT EXISTS public.promotions (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    discount_type TEXT CHECK (discount_type IN ('PERCENTAGE', 'FIXED_USD', 'SPECIAL_PRICE')) DEFAULT 'PERCENTAGE',
+    discount_value NUMERIC(12,2) NOT NULL CHECK (discount_value >= 0),
+    target_type TEXT CHECK (target_type IN ('ALL', 'CATEGORY', 'PRODUCT')) DEFAULT 'ALL',
+    target_id TEXT,
+    badge_text TEXT,
+    is_active BOOLEAN DEFAULT true,
+    user_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================================================
 -- POLÍTICAS DE ACCESO RLS (IDEMPOTENTES: LECTURA/ESCRITURA CON ANON KEY)
 -- =============================================================================
@@ -114,6 +129,7 @@ ALTER TABLE public.sale_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.debts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exchange_rates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Acceso total a users" ON public.users;
 CREATE POLICY "Acceso total a users" ON public.users FOR ALL USING (true) WITH CHECK (true);
@@ -138,6 +154,9 @@ CREATE POLICY "Acceso total a expenses" ON public.expenses FOR ALL USING (true) 
 
 DROP POLICY IF EXISTS "Acceso total a exchange_rates" ON public.exchange_rates;
 CREATE POLICY "Acceso total a exchange_rates" ON public.exchange_rates FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total a promotions" ON public.promotions;
+CREATE POLICY "Acceso total a promotions" ON public.promotions FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================================================
 -- HABILITAR REALTIME PARA SINCRONIZACIÓN EN VIVO MULTIDISPOSITIVO
@@ -171,6 +190,10 @@ BEGIN
 
   BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.promotions;
   EXCEPTION WHEN duplicate_object THEN NULL; END;
 END $$;
 

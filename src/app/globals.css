@@ -32,8 +32,14 @@
     color: #2C2825 !important;
   }
 
-  /* ── Light Mode: Fondos ──────────────────────────────────────── */
+  /* ── Light Mode: Fondos y Modificadores de Opacidad ───────────── */
   html.light .bg-stone-950,
+  html.light .bg-stone-950\/90,
+  html.light .bg-stone-950\/80,
+  html.light .bg-stone-950\/70,
+  html.light .bg-stone-950\/60,
+  html.light .bg-stone-950\/50,
+  html.light .bg-stone-950\/40,
   html.light .bg-slate-950 {
     background-color: #F3ECE2 !important;
     color: #2C2825 !important;
@@ -42,15 +48,22 @@
   html.light .bg-stone-900,
   html.light .bg-stone-900\/90,
   html.light .bg-stone-900\/80,
+  html.light .bg-stone-900\/70,
+  html.light .bg-stone-900\/60,
+  html.light .bg-stone-900\/50,
   html.light .bg-slate-900,
   html.light .bg-slate-900\/90,
-  html.light .bg-slate-900\/80 {
+  html.light .bg-slate-900\/80,
+  html.light .bg-slate-900\/60 {
     background-color: #FFFFFF !important;
     color: #2C2825 !important;
     box-shadow: 0 2px 12px rgba(140, 120, 100, 0.07) !important;
   }
 
   html.light .bg-stone-800,
+  html.light .bg-stone-800\/90,
+  html.light .bg-stone-800\/80,
+  html.light .bg-stone-800\/60,
   html.light .bg-stone-800\/40 {
     background-color: #EFE8DE !important;
     color: #2C2825 !important;
@@ -61,10 +74,24 @@
     color: #2C2825 !important;
   }
 
+  /* Inputs, selects y textareas en Light Mode */
+  html.light input,
+  html.light select,
+  html.light textarea {
+    background-color: #FFFFFF !important;
+    color: #1F1C1A !important;
+    border-color: #DDD4C8 !important;
+  }
+
+  html.light input::placeholder,
+  html.light textarea::placeholder {
+    color: #8A7E76 !important;
+  }
+
   /* ── Light Mode: CTAs amber (10% acento) — más claros y cálidos */
-  /* bg-amber-800 → Clay Brown medio #9E5C10 (readable sobre crema) */
   html.light .bg-amber-800,
-  html.light .bg-amber-800\/90 {
+  html.light .bg-amber-800\/90,
+  html.light .bg-amber-800\/80 {
     background-color: #9E5C10 !important;
     color: #FFFFFF !important;
   }
@@ -79,17 +106,20 @@
     background-color: #9E5C10 !important;
   }
 
-  /* bg-amber-900/40 → muy suave, casi transparente */
+  /* bg-amber-900/40 → muy suave en light mode */
   html.light .bg-amber-900\/40,
   html.light .bg-amber-900\/20,
+  html.light .bg-amber-950\/60,
+  html.light .bg-amber-950\/40,
   html.light .bg-amber-600\/30 {
-    background-color: rgba(158, 92, 16, 0.10) !important;
+    background-color: #F8EFE4 !important;
+    border-color: #D6A85B !important;
+    color: #7A4204 !important;
   }
 
   /* ── Light Mode: Textos ──────────────────────────────────────── */
   html.light .text-stone-100,
-  html.light .text-stone-200,
-  html.light .text-white {
+  html.light .text-stone-200 {
     color: #1F1C1A !important;
   }
 
@@ -97,12 +127,12 @@
   html.light .text-stone-400,
   html.light .text-slate-400,
   html.light .text-slate-300 {
-    color: #59524C !important;
+    color: #4A443F !important;
   }
 
   html.light .text-stone-500,
   html.light .text-stone-600 {
-    color: #8A7E76 !important;
+    color: #786E66 !important;
   }
 
   /* Acento kintsugi en modo claro → Clay Brown más oscuro para legibilidad */
@@ -111,14 +141,21 @@
     color: #8C4E0B !important;
   }
 
-  html.light .text-amber-400 {
-    color: #8C4E0B !important;
+  /* ── Light Mode: Texto Blanco Puro (#FFFFFF) EXCLUSIVAMENTE en elementos con fondo Amber (Botones CTA, Badges de iniciales, Logo y Tab Activo) ── */
+  html.light button.bg-amber-800,
+  html.light button.bg-amber-700,
+  html.light .alphabet-badge,
+  html.light nav button.bg-amber-800\/95,
+  html.light nav button.bg-amber-800\/90,
+  html.light header .bg-amber-800 {
+    color: #FFFFFF !important;
   }
 
-  /* Texto sobre botones CTA amber en light mode → blanco puro */
-  html.light .bg-amber-800 .text-stone-100,
-  html.light .bg-amber-800 span,
-  html.light .bg-amber-800 svg {
+  html.light button.bg-amber-800 *,
+  html.light button.bg-amber-700 *,
+  html.light nav button.bg-amber-800\/95 *,
+  html.light nav button.bg-amber-800\/90 *,
+  html.light header .bg-amber-800 * {
     color: #FFFFFF !important;
   }
 
@@ -141,9 +178,9 @@
 
   /* ── Light Mode: wabi-card refinada ─────────────────────────── */
   html.light .wabi-card {
-    background-color: #FFFFFF;
-    border-color: #E8DDD4;
-    box-shadow: 0 2px 12px rgba(120, 100, 80, 0.07);
+    background-color: #FFFFFF !important;
+    border-color: #E8DDD4 !important;
+    box-shadow: 0 4px 16px rgba(120, 100, 80, 0.08) !important;
   }
 
   /* ── Light Mode: glass-panel ────────────────────────────────── */
@@ -154,6 +191,7 @@
   }
 
   /* ── Light Mode: Navbar tabs activos ────────────────────────── */
+  html.light nav .bg-amber-800\/95,
   html.light nav .bg-amber-800\/90 {
     background-color: #9E5C10 !important;
     color: #FFFFFF !important;
