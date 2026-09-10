@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
   CreditCard, MessageSquare, CheckCircle, Calendar, DollarSign,
-  User, ChevronDown, ChevronUp, Layers, ListFilter, CheckCheck, Trash2
+  User, ChevronDown, ChevronUp, Layers, ListFilter, CheckCheck, Trash2, Search
 } from 'lucide-react';
 import { Debt, Client, ExchangeRate } from '../../lib/types';
 import { formatUSD, formatVES } from '../../lib/bimonetary/exchangeRate';
@@ -47,6 +47,8 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
 }) => {
   const [viewMode, setViewMode]         = useState<'GROUPED' | 'INDIVIDUAL'>('GROUPED');
   const [filterStatus, setFilterStatus] = useState<'PENDING' | 'PAID' | 'ALL'>('PENDING');
+  const [searchQuery, setSearchQuery]   = useState('');
+  const [sortBy, setSortBy]             = useState<'name' | 'amount'>('name');
   const [expandedClientIds, setExpandedClientIds] = useState<string[]>([]);
   const [selectedDebtForPayment, setSelectedDebtForPayment] = useState<Debt | null>(null);
   const [selectedGroupedForPayment, setSelectedGroupedForPayment] = useState<GroupedClientDebt | null>(null);
@@ -58,6 +60,22 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
     if (filterStatus === 'PENDING') return d.status !== 'PAID';
     if (filterStatus === 'PAID')    return d.status === 'PAID';
     return true;
+  }).filter((d) => {
+    if (!searchQuery) return true;
+    const client = clients.find(c => c.id === d.client_id);
+    const name = (client?.full_name || d.client_name || '').toLowerCase();
+    return name.includes(searchQuery.toLowerCase());
+  }).sort((a, b) => {
+    if (viewMode !== 'INDIVIDUAL') return 0;
+    if (sortBy === 'amount') {
+      return b.amount_usd - a.amount_usd;
+    } else {
+      const clientA = clients.find(c => c.id === a.client_id);
+      const nameA = (clientA?.full_name || a.client_name || '').toLowerCase();
+      const clientB = clients.find(c => c.id === b.client_id);
+      const nameB = (clientB?.full_name || b.client_name || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    }
   });
 
   const totalPendingUSD = debts
@@ -93,9 +111,13 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
         is_all_paid,
       };
     });
-    result.sort((a, b) => b.total_usd - a.total_usd);
+    if (sortBy === 'amount') {
+      result.sort((a, b) => b.total_usd - a.total_usd);
+    } else {
+      result.sort((a, b) => a.client_name.localeCompare(b.client_name));
+    }
     return result;
-  }, [filteredDebts, clients]);
+  }, [filteredDebts, clients, sortBy]);
 
   const toggleExpandClient = (id: string) =>
     setExpandedClientIds((prev) =>
@@ -231,43 +253,72 @@ export const DebtsModule: React.FC<DebtsModuleProps> = ({
       </div>
 
       {/* ── Filtros + Vista ─────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-stone-800 pb-3">
-        {/* Status filter tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {filterTabs.map(({ key, label, count }) => (
-            <button
-              key={key}
-              onClick={() => setFilterStatus(key)}
-              className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all ${
-                filterStatus === key
-                  ? 'bg-stone-700 text-stone-100 border border-stone-600'
-                  : 'bg-transparent text-stone-400 hover:text-stone-100 border border-transparent'
-              }`}
-            >
-              {label} ({count})
-            </button>
-          ))}
-        </div>
-
-        {/* View mode switcher */}
-        <div className="flex items-center gap-1 bg-stone-900 p-1 rounded-xl border border-stone-800 self-start sm:self-auto">
-          {(['GROUPED', 'INDIVIDUAL'] as const).map((mode) => {
-            const Icon  = mode === 'GROUPED' ? Layers : ListFilter;
-            const label = mode === 'GROUPED' ? 'Por cliente' : 'Individual';
-            return (
+      <div className="flex flex-col gap-3 border-b border-stone-800 pb-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+          {/* Status filter tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {filterTabs.map(({ key, label, count }) => (
               <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all ${
-                  viewMode === mode
+                key={key}
+                onClick={() => setFilterStatus(key)}
+                className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all ${
+                  filterStatus === key
                     ? 'bg-stone-700 text-stone-100 border border-stone-600'
-                    : 'text-stone-400 hover:text-stone-100'
+                    : 'bg-transparent text-stone-400 hover:text-stone-100 border border-transparent'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" /> {label}
+                {label} ({count})
               </button>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* View mode switcher */}
+          <div className="flex items-center gap-1 bg-stone-900 p-1 rounded-xl border border-stone-800 self-start sm:self-auto">
+            {(['GROUPED', 'INDIVIDUAL'] as const).map((mode) => {
+              const Icon  = mode === 'GROUPED' ? Layers : ListFilter;
+              const label = mode === 'GROUPED' ? 'Por cliente' : 'Individual';
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all ${
+                    viewMode === mode
+                      ? 'bg-stone-700 text-stone-100 border border-stone-600'
+                      : 'text-stone-400 hover:text-stone-100'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" /> {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Buscador y Orden */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-stone-500" />
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar por nombre de cliente..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-stone-900 border border-stone-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-200 placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
+            />
+          </div>
+          
+          <button
+            onClick={() => setSortBy(prev => prev === 'name' ? 'amount' : 'name')}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-sm font-bold text-stone-400 hover:text-stone-200 transition-colors shrink-0"
+          >
+            {sortBy === 'name' ? (
+              <><ListFilter className="w-4 h-4" /> Ordenado A-Z</>
+            ) : (
+              <><ListFilter className="w-4 h-4" /> Ordenado por mayor deuda</>
+            )}
+          </button>
         </div>
       </div>
 
